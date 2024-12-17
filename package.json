@@ -4,7 +4,8 @@
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd mern-server && npm start",
-    "client": "cd mern-client && npm run dev"
+    "client": "cd mern-client && npm run dev",
+    "build": "cd mern-client && npm install && npm run build"
   },
   "devDependencies": {
     "concurrently": "^7.0.0",
