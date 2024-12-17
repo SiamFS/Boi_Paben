@@ -1,12 +1,10 @@
-/** @type {import('tailwindcss').Config} */
+// mern-client/tailwind.config.js
+import flowbitePlugin from 'flowbite/plugin';
+
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-    '.node_modules/flowbite-react/**/*.{js,ts,jsx,tsx}'
-  ],
+  content: ['./src/**/*.{html,js,jsx,ts,tsx}'],
   theme: {
     extend: {},
   },
-  plugins: [require('flowbite/plugin')],
+  plugins: [flowbitePlugin],
 };
