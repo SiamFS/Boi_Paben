@@ -1,6 +1,6 @@
 {
     "buildCommand": "npm run build",
-    "outputDirectory": "mern-client/dist",
+    "outputDirectory": "mern-client",
     "framework": "vite"
   }
   
