@@ -3,8 +3,6 @@ import { Sidebar as FlowbiteSidebar } from "flowbite-react";
 import { HiChartPie, HiInbox, HiOutlineCloud} from "react-icons/hi";
 
 
-
-
 export function Sidebar() {
   return (
     <FlowbiteSidebar>
@@ -15,6 +13,9 @@ export function Sidebar() {
           </FlowbiteSidebar.Item>
           <FlowbiteSidebar.Item href="/dashboard/upload" icon={HiOutlineCloud}>
             <p>UploadBooks</p>
+          </FlowbiteSidebar.Item>
+          <FlowbiteSidebar.Item href="/dashboard/manage" icon={HiInbox}>
+            <p>ManageBooks</p>
           </FlowbiteSidebar.Item>
         </FlowbiteSidebar.ItemGroup>
       </FlowbiteSidebar.Items>

@@ -42,7 +42,6 @@ const AuthProvider = ({ children }) => {
 
   const createUser = async (email, password, firstName, lastName) => {
     setLoading(true);
-    try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(userCredential.user);
       
@@ -62,10 +61,7 @@ const AuthProvider = ({ children }) => {
         user: userCredential.user,
         message: "Account created successfully. Please check your email for verification."
       };
-    } catch (error) {
-      setLoading(false);
-      throw error;
-    }
+  
   };
 
   const login = async (email, password) => {

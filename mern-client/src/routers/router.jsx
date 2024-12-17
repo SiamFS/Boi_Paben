@@ -10,6 +10,9 @@ import Login from "../components/Login";
 import Logout from "../components/logout";
 import SearchBox from "../components/SearchBox"; 
 import ForgotPassword from "../components/FogotPassword";
+import ManageBooks from "../Dashboard/ManageBooks";
+import EditBooks from "../Dashboard/EditBooks";
+import SingleBook from "../shop/singlebook";
 
 
 const router = createBrowserRouter([
@@ -34,6 +37,11 @@ const router = createBrowserRouter([
         element: <SearchBox />,
         loader: ({ params }) => fetch(`http://localhost:1526/search/${params.title}`),
       },
+      {
+        path: '/book/:id',
+        element: <SingleBook />,
+        loader: ({ params }) => fetch(`http://localhost:1526/book/${params.id}`), 
+      }
     ],
   },
   {
@@ -47,6 +55,15 @@ const router = createBrowserRouter([
         path: "/dashboard/upload",
         element: <UploadBook />,
       },
+      {
+        path: "/dashboard/manage",
+        element: <ManageBooks />,
+      },
+      {
+        path: "/dashboard/edit/:id",
+        element: <EditBooks/>,
+        loader: ({ params }) => fetch(`http://localhost:1526/book/${params.id}`),
+      }
     ],
   },
   {
