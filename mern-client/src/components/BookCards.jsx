@@ -10,14 +10,60 @@ import { AuthContext } from '../contexts/AuthProvider';
 const BookCard = ({ headline, books }) => {
   const [hoveredBook, setHoveredBook] = useState(null);
   const { user } = useContext(AuthContext);
+  const [userCart, setUserCart] = useState([]);
   const [availableBooks, setAvailableBooks] = useState([]);
 
   useEffect(() => {
+    if (user) {
+      fetch(`http://localhost:1526/cart/${user.email}`)
+        .then((res) => res.json())
+        .then((data) => setUserCart(data))
+        .catch((error) => console.error('Error fetching cart data:', error));
+    }
+    
+    // Filter out sold books
     const filteredBooks = books.filter(book => book.availability !== "sold");
     setAvailableBooks(filteredBooks);
   }, [user, books]);
 
-  
+  const addToCart = (e, book) => {
+    e.preventDefault();
+
+    if (user) {
+      if (userCart.some(item => item._id === book._id)) {
+        alert('This book is already in your cart.');
+        return;
+      }
+
+      const cartItem = {
+        ...book,
+        user_email: user.email,
+      };
+
+      fetch('http://localhost:1526/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cartItem),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setUserCart(prevCart => [...prevCart, cartItem]);
+          } else {
+            alert(data.message || 'Failed to add book to cart');
+          }
+        })
+        .catch((error) => {
+          console.error('Error adding to cart:', error);
+          alert('An error occurred while adding the book to cart');
+        });
+    } else {
+      alert('You need to be logged in to add items to the cart');
+    }
+  };
+
   return (
     <div className='my-16 px-4 lg:px-24'>
       <h2 className='text-5xl text-center font-bold text-gray-800 pb-10'>{headline}</h2>
