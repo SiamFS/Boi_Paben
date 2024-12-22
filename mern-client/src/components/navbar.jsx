@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaBars, FaBookOpen, FaTimes, FaShoppingCart, FaSignOutAlt, FaCamera } from 'react-icons/fa';
 import { AuthContext } from '../contexts/AuthProvider';
 
-
 function Navbar() {
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [isSticky, setSticky] = useState(false);
@@ -15,11 +14,9 @@ function Navbar() {
     const profileRef = useRef(null);
     const fileInputRef = useRef(null);
 
-
     const toggleMenu = () => {
         setMenuOpen(!isMenuOpen);
     };
-
 
     const toggleProfile = () => {
         setProfileOpen(!isProfileOpen);
@@ -44,7 +41,6 @@ function Navbar() {
         };
         window.addEventListener('scroll', handleScroll);
 
-
         const handleClickOutside = (event) => {
             if (profileRef.current && !profileRef.current.contains(event.target)) {
                 setProfileOpen(false);
@@ -52,13 +48,39 @@ function Navbar() {
         };
         document.addEventListener('mousedown', handleClickOutside);
 
-
         return () => {
             window.removeEventListener('scroll', handleScroll);
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
 
+    useEffect(() => {
+        const fetchCartCount = async () => {
+            if (user && user.email) {
+                try {
+                    const response = await fetch(`http://localhost:1526/cart/count`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email: user.email }),
+                    });
+                    const data = await response.json();
+                    setCartCount(data.count);
+                } catch (error) {
+                    console.error('Error fetching cart count:', error);
+                    setCartCount(0);
+                }
+            } else {
+                setCartCount(0);
+            }
+        };
+
+        fetchCartCount();
+
+        const intervalId = setInterval(fetchCartCount, 1000); // Poll every 1 second
+        return () => clearInterval(intervalId);
+    }, [user]);
 
     const handleSearch = () => {
         if (searchTerm.trim()) {
@@ -66,30 +88,26 @@ function Navbar() {
         }
     };
 
-
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
             handleSearch();
         }
     };
 
-
     const handleLogout = () => {
         navigate('/logout');
     };
 
-
     const handleProfilePictureClick = () => {
         fileInputRef.current.click();
     };
-
 
     const handleFileChange = async (event) => {
         const file = event.target.files[0];
         if (file) {
             const formData = new FormData();
             formData.append('image', file);
-           
+            
             try {
                 const response = await fetch(`https://api.imgbb.com/1/upload?key=47bd3a08478085812d1960523ecd71ba`, {
                     method: 'POST',
@@ -105,7 +123,6 @@ function Navbar() {
         }
     };
 
-
     const navItems = [
         { link: 'Home', path: '/' },
         { link: 'About', path: '/about' },
@@ -114,7 +131,6 @@ function Navbar() {
         { link: 'Blog', path: '/blog' },
     ];
 
-
     return (
         <header className={`fixed top-0 left-0 right-0 z-50 ${isSticky ? 'bg-white shadow-md' : 'bg-transparent'}`}>
             <div className="container mx-auto px-4">
@@ -122,7 +138,7 @@ function Navbar() {
                     <Link to='/' className="text-2xl font-bold text-orange-400 flex items-center gap-2">
                         <FaBookOpen className='inline-block' /> Cover Book
                     </Link>
-                   
+                    
                     <ul className="hidden md:flex space-x-8">
                         {navItems.map((item, index) => (
                             <li key={index}>
@@ -130,14 +146,14 @@ function Navbar() {
                             </li>
                         ))}
                     </ul>
-                   
+                    
                     <div className="hidden md:flex items-center space-x-4">
                         {user ? (
                             <div className="relative" ref={profileRef}>
                                 <button onClick={toggleProfile} className="text-black focus:outline-none">
-                                    <img
-                                        src={user.photoURL || "https://ibb.co/J5JqNKx"}
-                                        alt="Profile"
+                                    <img 
+                                        src={user.photoURL || "https://ibb.co/J5JqNKx"} 
+                                        alt="Profile" 
                                         className="h-10 w-10 rounded-full object-cover"
                                     />
                                 </button>
@@ -145,22 +161,22 @@ function Navbar() {
                                     <div className={`absolute mt-2 w-64 bg-blue-200 rounded-lg shadow-xl py-2 px-4 ${getDropdownPositionClass()}`} style={{ minWidth: '200px' }}>
                                         <p className="text-center text-sm text-gray-600 mb-2">{`${user.firstName} ${user.lastName}`}</p>
                                         <p className="text-center text-sm text-gray-600 mb-2">{user.email}</p>
-                                        <button
+                                        <button 
                                             onClick={handleProfilePictureClick}
                                             className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 mb-2"
                                         >
                                             <FaCamera className="mr-2" />
                                             {user.photoURL === "https://i.ibb.co/yWjpDXh/image.png" ? "Upload Profile Picture" : "Update Profile Picture"}
                                         </button>
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            onChange={handleFileChange}
-                                            accept="image/*"
-                                            className="hidden"
+                                        <input 
+                                            type="file" 
+                                            ref={fileInputRef} 
+                                            onChange={handleFileChange} 
+                                            accept="image/*" 
+                                            className="hidden" 
                                         />
-                                        <button
-                                            onClick={handleLogout}
+                                        <button 
+                                            onClick={handleLogout} 
                                             className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                                         >
                                             <FaSignOutAlt className="mr-2" /> Logout
@@ -171,13 +187,21 @@ function Navbar() {
                         ) : (
                             <Link to='/login' className='text-black font-semibold'>Login</Link>
                         )}
+                        <Link to='/add-to-payment' className='text-black font-semibold relative'>
+                            <FaShoppingCart className='h-6 w-6' />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
                     </div>
-                   
+                    
                     <button onClick={toggleMenu} className="md:hidden text-black focus:outline-none">
                         {isMenuOpen ? <FaTimes className='h-6 w-6' /> : <FaBars className='h-6 w-6' />}
                     </button>
                 </nav>
-               
+                
                 {isMenuOpen && (
                     <div className="md:hidden py-4 bg-white">
                         {navItems.map(({ link, path }) => (
@@ -186,8 +210,8 @@ function Navbar() {
                         {user ? (
                             <>
                                 <p className="py-2 text-base font-bold text-black">{user.email}</p>
-                                <button
-                                    onClick={handleLogout}
+                                <button 
+                                    onClick={handleLogout} 
                                     className="flex items-center w-full py-2 text-base text-black hover:text-orange-400"
                                 >
                                     <FaSignOutAlt className="mr-2" /> Logout
@@ -196,13 +220,13 @@ function Navbar() {
                         ) : (
                             <Link to='/login' className='block py-2 text-base text-black hover:text-orange-400' onClick={toggleMenu}>Login</Link>
                         )}
-                        <Link to='/add_to_payment' className='block py-2 text-base text-black hover:text-orange-400' onClick={toggleMenu}>
+                        <Link to='/add-to-payment' className='block py-2 text-base text-black hover:text-orange-400' onClick={toggleMenu}>
                             Cart ({cartCount})
                         </Link>
                     </div>
                 )}
             </div>
-           
+            
             <div className="bg-transparent pb-1 ml-16">
                 <div className="container mx-auto">
                     <div className="relative max-w-xl mx-auto">
@@ -226,6 +250,5 @@ function Navbar() {
         </header>
     );
 }
-
 
 export default Navbar;
