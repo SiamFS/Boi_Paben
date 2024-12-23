@@ -176,8 +176,8 @@ async function run() {
         const cartItem = {
           ...rest,
           user_email,
-          original_id: _id,  // Store the original book ID
-          _id: new ObjectId() // Generate a new unique ID for the cart item
+          original_id: _id,  
+          _id: new ObjectId() 
         };
 
         const result = await cartCollection.insertOne(cartItem);
@@ -257,7 +257,7 @@ async function run() {
           const { items, email } = req.body;
         
           try {
-            // Fetch the original book IDs from cartCollection
+            
             const cartItems = await cartCollection.find({ user_email: email }).toArray();
             const originalBookIds = cartItems.map(item => item.original_id);
         
@@ -270,7 +270,7 @@ async function run() {
                     name: item.bookTitle,
                     images: [item.imageURL],
                   },
-                  // Convert price to paisa and ensure it's an integer
+                 
                   unit_amount: Math.round(parseFloat(item.Price) * 100),
                 },
                 quantity: 1,
