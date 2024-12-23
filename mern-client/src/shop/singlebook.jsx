@@ -37,7 +37,7 @@ const SingleBook = () => {
 
     // Check if the book is in the user's cart
     if (user) {
-      fetch(`https://boi-paben-backend.onrender.com/cart/${user.email}`)
+      fetch(`http://localhost:1526/cart/${user.email}`)
         .then(res => res.json())
         .then(data => {
           setInCart(data.some(item => item.original_id === _id));
@@ -45,7 +45,97 @@ const SingleBook = () => {
         .catch(error => console.error('Error fetching user cart:', error));
     }
   }, [user, _id]);
+  const handleReport = async () => {
+    if (!reportReason) {
+      setReportMessage('Please select a reason for reporting.');
+      return;
+    }
 
+    const reportData = {
+      bookId: _id,
+      bookTitle,
+      sellerName: seller,
+      sellerEmail: email,
+      reporterEmail: user.email,
+      reporterName: user.displayName,
+      reason: reportReason,
+    };
+
+    try {
+      const response = await fetch('http://localhost:1526/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setReportMessage('Report submitted successfully.');
+        setTimeout(() => {
+          setShowReportModal(false);
+          setReportMessage('');
+        }, 2000);
+      } else if (result.message === 'Already reported') {
+        setReportMessage('You have already reported this book.');
+      } else {
+        setReportMessage('Failed to submit report. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      setReportMessage('An error occurred. Please try again.');
+    }
+  };
+
+  const handleReportClick = () => {
+    if (user) {
+      setShowReportModal(true);
+    } else {
+      alert('Please log in to report this book.');
+    }
+  };
+  const addToCart = () => {
+    if (user) {
+      if (inCart) {
+        alert('This book is already in your cart.');
+        return;
+      }
+
+      const cartItem = {
+        original_id: _id,
+        bookTitle,
+        authorName,
+        imageURL,
+        Price,
+        category,
+        user_email: user.email,
+      };
+
+      fetch('http://localhost:1526/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cartItem),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setInCart(true);
+          } else {
+            alert(data.message || 'Failed to add book to cart');
+          }
+        })
+        .catch((error) => {
+          console.error('Error adding to cart:', error);
+          alert('An error occurred while adding the book to cart');
+        });
+    } else {
+      alert('You need to be logged in to add items to the cart');
+    }
+  };
   return (
     <div className="flex min-h-screen pt-[80px] md:pt-[40px] bg-gray-100 flex-grow mt-[100px] md:mt-[80px]">
       <div className="flex-grow">
@@ -65,7 +155,7 @@ const SingleBook = () => {
                     </button>
                   ) : (
                     <button
-                    
+                      onClick={addToCart}
                       className={`w-1/2 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
                         inCart ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'
                       } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500`}
@@ -76,7 +166,7 @@ const SingleBook = () => {
                     </button>
                   )}
                   <button
-                    
+                    onClick={handleReportClick}
                     className="w-1/2 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
                     <HiExclamationCircle className="mr-2 size-4" />

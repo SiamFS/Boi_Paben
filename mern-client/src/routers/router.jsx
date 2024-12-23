@@ -13,6 +13,8 @@ import ForgotPassword from "../components/FogotPassword";
 import ManageBooks from "../Dashboard/ManageBooks";
 import EditBooks from "../Dashboard/EditBooks";
 import SingleBook from "../shop/singlebook";
+import AddToPayment from "../shop/add_to_payment";
+import Blog from "../components/Blog";
 
 
 const router = createBrowserRouter([
@@ -41,6 +43,14 @@ const router = createBrowserRouter([
         path: '/book/:id',
         element: <SingleBook />,
         loader: ({ params }) => fetch(`http://localhost:1526/book/${params.id}`), 
+      },
+      {
+        path: '/add-to-payment',
+        element: <AddToPayment />,
+      },
+      {
+        path: "/blog",
+        element: <Blog />,
       }
     ],
   },

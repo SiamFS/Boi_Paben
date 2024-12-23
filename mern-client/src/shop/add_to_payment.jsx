@@ -57,20 +57,18 @@ const AddToPayment = () => {
   const totalPrice = cartItems.reduce((acc, item) => acc + parseFloat(item.Price), 0);
 
   const handleCheckout = () => {
-    // Check if cart is empty
     if (cartItems.length === 0) {
       setCheckoutWarning('Your cart is empty. Please add items to proceed.');
       return;
     }
 
-    // Check if any item is sold
     const soldItem = cartItems.find(item => item.availability === 'sold');
     if (soldItem) {
       setCheckoutWarning('Some items in your cart are sold out. Please remove them to proceed.');
       return;
     }
 
-    setCheckoutWarning(''); // Clear warning if no issues
+    setCheckoutWarning(''); 
     setIsModalOpen(true);
   };
 
@@ -83,10 +81,10 @@ const AddToPayment = () => {
     const stripe = await stripePromise;
   
     try {
-      // Ensure prices are properly formatted before sending to server
+      
       const formattedItems = cartItems.map(item => ({
         ...item,
-        Price: parseFloat(item.Price).toFixed(2) // Ensures proper decimal format
+        Price: parseFloat(item.Price).toFixed(2) 
       }));
   
       const response = await fetch('http://localhost:1526/create-checkout-session', {
