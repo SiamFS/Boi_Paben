@@ -18,7 +18,7 @@ const BookCard = ({ headline, books }) => {
       setUserCart([]);
     }
     if (user?.email) {
-      fetch(`http://localhost:5000/cart/${user.email}`)
+      fetch(`https://cse471-project-backend.onrender.com/cart/${user.email}`)
         .then((res) => res.json())
         .then((data) => setUserCart(data))
         .catch((error) => console.error('Error fetching cart data:', error));
@@ -53,7 +53,7 @@ const BookCard = ({ headline, books }) => {
       user_email: user.email,
     };
 
-    fetch('http://localhost:5000/cart', {
+    fetch('https://cse471-project-backend.onrender.com/cart', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

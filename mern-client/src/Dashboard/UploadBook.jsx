@@ -125,7 +125,7 @@ const UploadBook = () => {
     console.log(bookObj);
 
     // Send data to backend
-    fetch('http://localhost:1526/upload-book', {
+    fetch('https://cse471-project-backend.onrender.com/upload-book', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

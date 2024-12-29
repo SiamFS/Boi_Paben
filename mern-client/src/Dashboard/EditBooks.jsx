@@ -126,7 +126,7 @@ const EditBooks = () => {
       seller: `${user.firstName} ${user.lastName}`
     };
 
-    fetch(`http://localhost:1526/book/${id}`, {
+    fetch(`https://cse471-project-backend.onrender.com/book/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'

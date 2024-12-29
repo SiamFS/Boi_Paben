@@ -58,7 +58,7 @@ function Navbar() {
         const fetchCartCount = async () => {
             if (user && user.email) {
                 try {
-                    const response = await fetch(`http://localhost:5000/cart/count`, {
+                    const response = await fetch(`https://cse471-project-backend.onrender.com/cart/count`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

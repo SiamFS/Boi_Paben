@@ -13,9 +13,9 @@ const Shop = () => {
         const fetchBooks = async () => {
             try {
                 setLoading(true);
-                let url = `http://localhost:5000/allbooks?sort=createdAt&order=desc`;
+                let url = `https://cse471-project-backend.onrender.com/allbooks?sort=createdAt&order=desc`;
                 if (sortOrder) {
-                    url = `http://localhost:5000/allbooks?sort=Price&order=${sortOrder}`;
+                    url = `https://cse471-project-backend.onrender.com/allbooks?sort=Price&order=${sortOrder}`;
                 }
                 if (category) {
                     url += `&category=${category}`;

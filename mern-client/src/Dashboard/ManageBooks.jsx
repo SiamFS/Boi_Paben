@@ -11,7 +11,7 @@ const ManageBooks = () => {
 
     const fetchBooks = async () => {
       try {
-        const response = await fetch(`http://localhost:1526/book/email/${user.email}`);
+        const response = await fetch(`https://cse471-project-backend.onrender.com/book/email/${user.email}`);
         const data = await response.json();
         const availableBooks = data.filter(book => book.availability !== "sold");
         setAllBooks(availableBooks);
@@ -25,7 +25,7 @@ const ManageBooks = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:1526/book/${id}`, {
+      const response = await fetch(`https://cse471-project-backend.onrender.com/book/${id}`, {
         method: 'DELETE',
       });
       const data = await response.json();

@@ -12,7 +12,7 @@ const PaymentSuccess = () => {
     const session_id = searchParams.get('session_id');
 
     if (session_id) {
-      fetch('http://localhost:5000/payment-success', {
+      fetch('https://cse471-project-backend.onrender.com/payment-success', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -10,7 +10,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchSoldBooks = async () => {
       try {
-        const response = await fetch(`http://localhost:1526/book/email/${user.email}`);
+        const response = await fetch(`https://cse471-project-backend.onrender.com/book/email/${user.email}`);
         if (!response.ok) {
           throw new Error('Failed to fetch sold books');
         }

@@ -13,7 +13,7 @@ const CategoryBooks = () => {
   const [books, setBooks] = useState([]);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/books/category/${selectedCategory}`)
+    fetch(`https://cse471-project-backend.onrender.com/books/category/${selectedCategory}`)
       .then(res => res.json())
       .then(data => setBooks(data.slice(0, 90)))
       .catch(error => console.error('Error fetching books:', error));
