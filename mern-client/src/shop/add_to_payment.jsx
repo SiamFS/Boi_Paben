@@ -24,7 +24,7 @@ export const PaymentSuccess = () => {
       }
 
       try {
-        const response = await fetch('https://cse471-project-backend.onrender.com/manual-payment-success', {
+        const response = await fetch('https://cse471-project-backend.onrender.com/add-payment-success', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -43,11 +43,11 @@ export const PaymentSuccess = () => {
           }, 2000);
         } else {
           console.error('Payment processing failed:', result.message);
-          navigate('/add_to_payment');
+          navigate('https://cse471-project-backend.onrender.com/add_to_payment');
         }
       } catch (error) {
         console.error('Error processing payment:', error);
-        navigate('/add_to_payment');
+        navigate('https://cse471-project-backend.onrender.com/add_to_payment');
       }
     };
 

@@ -35,120 +35,117 @@ async function run() {
       const { items, email } = req.body;
     
       try {
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          line_items: items.map(item => ({
-            price_data: {
-              currency: 'bdt',
-              product_data: {
-                name: item.bookTitle,
-                images: [item.imageURL],
-              },
-              unit_amount: Math.round(item.Price * 100),
-            },
-            quantity: 1,
-          })),
-          mode: 'payment',
-          success_url: `https://cse471-project-backend.onrender.com/payment-success`, // Redirect user here after success
-          cancel_url: `https://cse471-project-backend.onrender.com/add-to-payment`, // Redirect user here after cancellation
-          metadata: {
-            customerEmail: email,
-            cartItems: JSON.stringify(items),
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: items.map(item => ({
+        price_data: {
+          currency: 'bdt',
+          product_data: {
+          name: item.bookTitle,
+          images: [item.imageURL],
           },
+          unit_amount: Math.round(item.Price * 100),
+        },
+        quantity: 1,
+        })),
+        mode: 'payment',
+        success_url: `https://cse471-project-frontend.onrender.com/payment-success`, 
+        cancel_url: `https://cse471-project-frontend.onrender.com/add-to-payment`,
+        metadata: {
+        customerEmail: email,
+        cartItems: JSON.stringify(items),
+        },
+      });
+    
+
+      const cartItems = JSON.parse(session.metadata.cartItems);
+    
+      for (const item of cartItems) {
+        try {
+      
+        await bookCollection.updateOne(
+          { _id: new ObjectId(item.original_id) },
+          { $set: { availability: 'sold' } }
+        );
+    
+    
+        await cartCollection.deleteOne({
+          _id: new ObjectId(item._id),
         });
-    
-        // Immediately process payment success logic
-        const cartItems = JSON.parse(session.metadata.cartItems);
-    
-        for (const item of cartItems) {
-          try {
-            // Update book availability
-            await bookCollection.updateOne(
-              { _id: new ObjectId(item.original_id) },
-              { $set: { availability: 'sold' } }
-            );
-    
-            // Remove from cart
-            await cartCollection.deleteOne({
-              _id: new ObjectId(item._id),
-            });
-          } catch (error) {
-            console.error(`Error processing item ${item._id}:`, error);
-          }
+        } catch (error) {
+        console.error(`Error processing item ${item._id}:`, error);
         }
+      }
     
-        // Save payment information
-        const paymentInfo = {
-          email: session.metadata.customerEmail,
-          amount: session.amount_total / 100,
-          items: cartItems.map(item => ({
-            bookId: item.original_id,
-            bookTitle: item.bookTitle,
-          })),
-          paymentDate: new Date(),
-          paymentMethod: 'card',
-        };
+      // Save payment information
+      const paymentInfo = {
+        email: session.metadata.customerEmail,
+        amount: session.amount_total / 100,
+        items: cartItems.map(item => ({
+        bookId: item.original_id,
+        bookTitle: item.bookTitle,
+        })),
+        paymentDate: new Date(),
+        paymentMethod: 'card',
+      };
     
-        await paymentCollection.insertOne(paymentInfo);
+      await paymentCollection.insertOne(paymentInfo);
     
-        res.json({ id: session.id, success: true }); // Inform the frontend of session creation
+      res.json({ id: session.id, success: true }); // Inform the frontend of session creation
       } catch (error) {
-        console.error('Error creating checkout session:', error);
-        res.status(500).json({ success: false, error: error.message });
+      console.error('Error creating checkout session:', error);
+      res.status(500).json({ success: false, error: error.message });
       }
     });
     
-      
-
-// Cash on Delivery handler
-app.post('/cash-on-delivery', async (req, res) => {
-  const { items, email, address, totalAmount } = req.body;
-
-  try {
-    // Get original book IDs from cart items
-    const cartItems = await cartCollection.find({ 
-      user_email: email,
-      _id: { $in: items.map(item => new ObjectId(item._id)) }
-    }).toArray();
-
-    // Update book availability and remove from cart
-    for (const cartItem of cartItems) {
+    // Cash on Delivery handler
+    app.post('/cash-on-delivery', async (req, res) => {
+      const { items, email, address, totalAmount } = req.body;
+    
       try {
-        // Update book availability using original_id
+    
+      const cartItems = await cartCollection.find({ 
+        user_email: email,
+        _id: { $in: items.map(item => new ObjectId(item._id)) }
+      }).toArray();
+    
+      for (const cartItem of cartItems) {
+        try {
+  
         const updateResult = await bookCollection.updateOne(
           { _id: new ObjectId(cartItem.original_id) },
           { $set: { availability: 'sold' } }
         );
         console.log(`Updated book ${cartItem.original_id}: ${updateResult.modifiedCount} document(s) modified`);
-
-        // Remove from cart
+    
+    
         const deleteResult = await cartCollection.deleteOne({ _id: cartItem._id });
         console.log(`Removed from cart: ${deleteResult.deletedCount} document(s) deleted`);
-      } catch (error) {
+        } catch (error) {
         console.error(`Error processing cart item ${cartItem._id}:`, error);
+        }
       }
-    }
-
-    // Save payment information
-    const paymentInfo = {
-      email: email,
-      amount: totalAmount,
-      items: cartItems.map(item => ({
+    
+  
+      const paymentInfo = {
+        email: email,
+        amount: totalAmount,
+        items: cartItems.map(item => ({
         bookId: item.original_id,
         bookTitle: item.bookTitle
-      })),
-      address: address,
-      paymentDate: new Date(),
-      paymentMethod: 'cash on delivery',
-    };
-    await paymentCollection.insertOne(paymentInfo);
-
-    res.status(200).json({ success: true, message: 'Order placed successfully' });
-  } catch (error) {
-    console.error('Error processing cash on delivery:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+        })),
+        address: address,
+        paymentDate: new Date(),
+        paymentMethod: 'cash on delivery',
+      };
+      await paymentCollection.insertOne(paymentInfo);
+    
+      res.status(200).json({ success: true, message: 'Order placed successfully' });
+      } catch (error) {
+      console.error('Error processing cash on delivery:', error);
+      res.status(500).json({ success: false, error: error.message });
+      }
+    });
     
         // Create a new post
         app.post('/posts/create', async (req, res) => {
@@ -452,8 +449,8 @@ app.post('/cash-on-delivery', async (req, res) => {
             const cartItem = {
               ...rest,
               user_email,
-              original_id: _id,  // Store the original book ID
-              _id: new ObjectId() // Generate a new unique ID for the cart item
+              original_id: _id,  
+              _id: new ObjectId() 
             };
     
             const result = await cartCollection.insertOne(cartItem);
@@ -525,13 +522,13 @@ app.post('/cash-on-delivery', async (req, res) => {
             res.status(500).send({ error: 'Error fetching payments' });
           }
         });
-        // Add this to your existing Express server file
+       
     
     app.post('/report', async (req, res) => {
       const reportData = req.body;
       
       try {
-        // Check if this user has already reported this book
+       
         const existingReport = await reportCollection.findOne({
           bookId: reportData.bookId,
           reporterEmail: reportData.reporterEmail
@@ -541,7 +538,7 @@ app.post('/cash-on-delivery', async (req, res) => {
           return res.status(400).json({ success: false, message: 'Already reported' });
         }
     
-        // If not, insert the new report
+       
         const result = await reportCollection.insertOne(reportData);
         
         if (result.insertedId) {
@@ -555,114 +552,114 @@ app.post('/cash-on-delivery', async (req, res) => {
       }
     });
 
-    // Handle post reaction (like/dislike)
-app.post('/posts/:postId/react', async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const { userId, reactionType } = req.body; // reactionType should be 'like' or 'dislike'
 
-    // Check if user has already reacted to this post
-    const existingReaction = await reactionCollection.findOne({
-      postId: new ObjectId(postId),
-      userId: userId
-    });
-
-    if (existingReaction) {
-      if (existingReaction.type === reactionType) {
-        // Remove reaction if clicking the same button
-        await reactionCollection.deleteOne({ _id: existingReaction._id });
+      // Handle post reaction (like/dislike)
+      app.post('/posts/:postId/react', async (req, res) => {
+        try {
+        const { postId } = req.params;
+        const { userId, reactionType } = req.body; 
+      
+    
+        const existingReaction = await reactionCollection.findOne({
+          postId: new ObjectId(postId),
+          userId: userId
+        });
+      
+        if (existingReaction) {
+          if (existingReaction.type === reactionType) {
+          
+          await reactionCollection.deleteOne({ _id: existingReaction._id });
+          
         
-        // Update post reaction count
-        const updateField = `${reactionType}s`;
-        await blogCollection.updateOne(
-          { _id: new ObjectId(postId) },
-          { $inc: { [updateField]: -1 } }
-        );
-      } else {
-        // Change reaction type if clicking different button
-        await reactionCollection.updateOne(
-          { _id: existingReaction._id },
-          { $set: { type: reactionType } }
-        );
-        
-        // Update post reaction counts (decrease old, increase new)
-        const oldField = `${existingReaction.type}s`;
-        const newField = `${reactionType}s`;
-        await blogCollection.updateOne(
-          { _id: new ObjectId(postId) },
-          { 
+          const updateField = `${reactionType}s`;
+          await blogCollection.updateOne(
+            { _id: new ObjectId(postId) },
+            { $inc: { [updateField]: -1 } }
+          );
+          } else {
+          
+          await reactionCollection.updateOne(
+            { _id: existingReaction._id },
+            { $set: { type: reactionType } }
+          );
+          
+          
+          const oldField = `${existingReaction.type}s`;
+          const newField = `${reactionType}s`;
+          await blogCollection.updateOne(
+            { _id: new ObjectId(postId) },
+            { 
             $inc: { 
               [oldField]: -1,
               [newField]: 1
             } 
+            }
+          );
           }
-        );
-      }
-    } else {
-      // Create new reaction
-      await reactionCollection.insertOne({
-        postId: new ObjectId(postId),
-        userId: userId,
-        type: reactionType,
-        createdAt: new Date()
+        } else {
+          // Create new reaction
+          await reactionCollection.insertOne({
+          postId: new ObjectId(postId),
+          userId: userId,
+          type: reactionType,
+          createdAt: new Date()
+          });
+          
+          // Update post reaction count
+          const updateField = `${reactionType}s`;
+          await blogCollection.updateOne(
+          { _id: new ObjectId(postId) },
+          { $inc: { [updateField]: 1 } }
+          );
+        }
+      
+        // Get updated post data
+        const updatedPost = await blogCollection.findOne({ _id: new ObjectId(postId) });
+        
+        // Get user's current reaction for this post
+        const userReaction = await reactionCollection.findOne({
+          postId: new ObjectId(postId),
+          userId: userId
+        });
+      
+        res.status(200).json({
+          post: updatedPost,
+          userReaction: userReaction ? userReaction.type : null
+        });
+        } catch (error) {
+        console.error('Error handling reaction:', error);
+        res.status(500).json({ error: 'Error handling reaction' });
+        }
       });
       
-      // Update post reaction count
-      const updateField = `${reactionType}s`;
-      await blogCollection.updateOne(
-        { _id: new ObjectId(postId) },
-        { $inc: { [updateField]: 1 } }
-      );
+      // Get user's reactions for multiple posts
+      app.get('/posts/reactions/:userId', async (req, res) => {
+        try {
+        const { userId } = req.params;
+        const userReactions = await reactionCollection
+          .find({ userId: userId })
+          .toArray();
+        
+        res.status(200).json(userReactions);
+        } catch (error) {
+        console.error('Error fetching reactions:', error);
+        res.status(500).json({ error: 'Error fetching reactions' });
+        }
+      });
+      
+      // Health check endpoint
+      app.get('/', (req, res) => {
+        res.send('Hello from the Book Inventory API!');
+      });
+      
+      // Start server
+      app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+      });
+      } catch (error) {
+        console.error('Error connecting to MongoDB:', error);
+        process.exit(1);
+      }
     }
 
-    // Get updated post data
-    const updatedPost = await blogCollection.findOne({ _id: new ObjectId(postId) });
-    
-    // Get user's current reaction for this post
-    const userReaction = await reactionCollection.findOne({
-      postId: new ObjectId(postId),
-      userId: userId
-    });
-
-    res.status(200).json({
-      post: updatedPost,
-      userReaction: userReaction ? userReaction.type : null
-    });
-  } catch (error) {
-    console.error('Error handling reaction:', error);
-    res.status(500).json({ error: 'Error handling reaction' });
-  }
-});
-
-// Get user's reactions for multiple posts
-app.get('/posts/reactions/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const userReactions = await reactionCollection
-      .find({ userId: userId })
-      .toArray();
-    
-    res.status(200).json(userReactions);
-  } catch (error) {
-    console.error('Error fetching reactions:', error);
-    res.status(500).json({ error: 'Error fetching reactions' });
-  }
-});
-
-    // Health check endpoint
-    app.get('/', (req, res) => {
-      res.send('Hello from the Book Inventory API!');
-    });
-
-    // Start server
-    app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-    });
-
-  } catch (error) {
-    console.error('Error connecting to MongoDB:', error);
-    process.exit(1);
-  }
-}
-
-run().catch(console.dir);
+    run().catch(console.dir);

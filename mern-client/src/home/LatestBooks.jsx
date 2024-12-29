@@ -8,7 +8,7 @@ const LatestBooks = () => {
 
     useEffect(() => {
         setLoading(true);
-        fetch("https://cse471-project-backend.onrender.com/allbooks?sort=createdAt&order=desc&limit=8")
+        fetch("https://cse471-project-backend.onrender.com/allbooks")
             .then(res => {
                 if (!res.ok) {
                     throw new Error('Network response was not ok');
