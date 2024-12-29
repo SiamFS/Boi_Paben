@@ -19,7 +19,7 @@ const client = new MongoClient(uri, {
 });
 
 const stripe = require('stripe')('sk_test_51PiZwnGRR4keZPjY1AvOeX0MO8nurmyOYSuhf77UlCSGc0hxgBEHKeP1f57QaZamaMwDGjJhaMnoW2zGYDGdwV1l00TwOuTvnv');
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
+const BASE_URL = process.env.BASE_URL || 'https://cse471-project-frontend.onrender.com' || 'http://localhost:5173';
 // Main function to run the server
 async function run() {
   try {
@@ -49,8 +49,8 @@ async function run() {
         quantity: 1,
         })),
         mode: 'payment',
-        success_url: `https://cse471-project-frontend.onrender.com/payment-success`, 
-        cancel_url: `https://cse471-project-frontend.onrender.com/add-to-payment`,
+        success_url: `/payment-success`, 
+        cancel_url: `/add-to-payment`,
         metadata: {
         customerEmail: email,
         cartItems: JSON.stringify(items),

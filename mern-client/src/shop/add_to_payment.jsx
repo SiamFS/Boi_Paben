@@ -43,11 +43,11 @@ export const PaymentSuccess = () => {
           }, 2000);
         } else {
           console.error('Payment processing failed:', result.message);
-          navigate('https://cse471-project-backend.onrender.com/add_to_payment');
+          navigate('/add_to_payment');
         }
       } catch (error) {
         console.error('Error processing payment:', error);
-        navigate('https://cse471-project-backend.onrender.com/add_to_payment');
+        navigate('/add_to_payment');
       }
     };
 

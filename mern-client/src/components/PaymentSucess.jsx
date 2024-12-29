@@ -24,12 +24,10 @@ const PaymentSuccess = () => {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            // Payment processed successfully
+           
             console.log('Payment successful');
-            // You can add additional logic here, such as showing a success message
           } else {
             console.error('Payment processing failed');
-            // Handle the error, maybe show an error message to the user
           }
         })
         .catch((error) => {
