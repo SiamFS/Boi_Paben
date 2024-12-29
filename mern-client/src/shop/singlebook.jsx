@@ -38,7 +38,7 @@ const SingleBook = () => {
 
     // Check if the book is in the user's cart
     if (user) {
-      fetch(`http://localhost:1526/cart/${user.email}`)
+      fetch(`http://localhost:5000/cart/${user.email}`)
         .then(res => res.json())
         .then(data => {
           setInCart(data.some(item => item.original_id === _id));
@@ -64,7 +64,7 @@ const SingleBook = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:1526/report', {
+      const response = await fetch('http://localhost:5000/report', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ const SingleBook = () => {
         user_email: user.email,
       };
 
-      fetch('http://localhost:1526/cart', {
+      fetch('http://localhost:5000/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

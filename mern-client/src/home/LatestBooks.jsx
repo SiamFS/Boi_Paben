@@ -8,7 +8,7 @@ const LatestBooks = () => {
 
     useEffect(() => {
         setLoading(true);
-        fetch("http://localhost:1526/allbooks?sort=createdAt&order=desc&limit=8")
+        fetch("http://localhost:5000/allbooks?sort=createdAt&order=desc&limit=8")
             .then(res => {
                 if (!res.ok) {
                     throw new Error('Network response was not ok');

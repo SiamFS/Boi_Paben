@@ -43,12 +43,12 @@ const router = createBrowserRouter([
       {
         path: "/book/:id",
         element: <SingleBook />,
-        loader: ({ params }) => fetch(`http://localhost:1526/book/${params.id}`),
+        loader: ({ params }) => fetch(`http://localhost:5000/book/${params.id}`),
       },
       {
         path: "/search/:title",
         element: <SearchBox />,
-        loader: ({ params }) => fetch(`http://localhost:1526/search/${params.title}`),
+        loader: ({ params }) => fetch(`http://localhost:5000/search/${params.title}`),
       },
       {
         path: "/add-to-payment",
@@ -83,7 +83,7 @@ const router = createBrowserRouter([
       {
         path: "/dashboard/edit-books/:id",
         element: <EditBooks />,
-        loader: ({ params }) => fetch(`http://localhost:1526/book/${params.id}`),
+        loader: ({ params }) => fetch(`http://localhost:5000/book/${params.id}`),
       },
     ],
   },

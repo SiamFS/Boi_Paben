@@ -53,7 +53,7 @@ const Blog = () => {
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:1526/posts");
+      const response = await fetch("http://localhost:5000/posts");
       if (!response.ok) {
         throw new Error("Failed to fetch posts");
       }
@@ -102,7 +102,7 @@ const Blog = () => {
         imageUrl,
       };
 
-      const response = await fetch("http://localhost:1526/posts/create", {
+      const response = await fetch("http://localhost:5000/posts/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +123,7 @@ const Blog = () => {
 
   const fetchUserReactions = async () => {
     try {
-      const response = await fetch(`http://localhost:1526/posts/reactions/${user.uid}`);
+      const response = await fetch(`http://localhost:5000/posts/reactions/${user.uid}`);
       if (!response.ok) throw new Error('Failed to fetch reactions');
       const reactions = await response.json();
       
@@ -144,7 +144,7 @@ const Blog = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:1526/posts/${postId}/react`, {
+      const response = await fetch(`http://localhost:5000/posts/${postId}/react`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ const Blog = () => {
         imageUrl = await uploadImage(editingPost.newImage);
       }
 
-      const response = await fetch(`http://localhost:1526/posts/${editingPost._id}`, {
+      const response = await fetch(`http://localhost:5000/posts/${editingPost._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -205,7 +205,7 @@ const Blog = () => {
   const handleDeletePost = async (postId) => {
     if (window.confirm("Are you sure you want to delete this post?")) {
       try {
-        const response = await fetch(`http://localhost:1526/posts/${postId}`, {
+        const response = await fetch(`http://localhost:5000/posts/${postId}`, {
           method: "DELETE",
         });
         if (!response.ok) {
@@ -221,7 +221,7 @@ const Blog = () => {
 
   const handleEditComment = async (postId, commentId, newContent) => {
     try {
-      const response = await fetch(`http://localhost:1526/posts/${postId}/comments/${commentId}`, {
+      const response = await fetch(`http://localhost:5000/posts/${postId}/comments/${commentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -247,7 +247,7 @@ const Blog = () => {
   const handleDeleteComment = async (postId, commentId) => {
     if (window.confirm("Are you sure you want to delete this comment?")) {
       try {
-        const response = await fetch(`http://localhost:1526/posts/${postId}/comments/${commentId}`, {
+        const response = await fetch(`http://localhost:5000/posts/${postId}/comments/${commentId}`, {
           method: "DELETE",
         });
         if (!response.ok) {
@@ -271,7 +271,7 @@ const Blog = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:1526/posts/${postId}/comments`, {
+      const response = await fetch(`http://localhost:5000/posts/${postId}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

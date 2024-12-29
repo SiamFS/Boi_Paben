@@ -58,7 +58,7 @@ function Navbar() {
         const fetchCartCount = async () => {
             if (user && user.email) {
                 try {
-                    const response = await fetch(`http://localhost:1526/cart/count`, {
+                    const response = await fetch(`http://localhost:5000/cart/count`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

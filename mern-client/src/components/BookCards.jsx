@@ -18,7 +18,7 @@ const BookCard = ({ headline, books }) => {
       setUserCart([]);
     }
     if (user?.email) {
-      fetch(`http://localhost:1526/cart/${user.email}`)
+      fetch(`http://localhost:5000/cart/${user.email}`)
         .then((res) => res.json())
         .then((data) => setUserCart(data))
         .catch((error) => console.error('Error fetching cart data:', error));
@@ -53,7 +53,7 @@ const BookCard = ({ headline, books }) => {
       user_email: user.email,
     };
 
-    fetch('http://localhost:1526/cart', {
+    fetch('http://localhost:5000/cart', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
