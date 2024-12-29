@@ -1,12 +1,3 @@
-// import React from 'react'
-
-// function about() {
-//   return (
-//     <div>about</div>
-//   )
-// }
-
-// export default about
 
 import React from 'react'
 import { HiBookOpen } from "react-icons/hi";
