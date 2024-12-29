@@ -138,7 +138,7 @@ const EditBooks = () => {
   };
 
   if (!user) {
-    return <p>Loading...</p>; // Or redirect to login page
+    return <p>Loading...</p>; 
   }
 
   return (
