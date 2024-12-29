@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import BookCards from '../components/BookCards'; // Assuming this component is properly styled and reusable
+import BookCards from '../components/BookCards';
 import { HiSortAscending, HiViewList } from 'react-icons/hi';
 
 const Shop = () => {
@@ -15,7 +15,9 @@ const Shop = () => {
                 setLoading(true);
                 let url = `https://cse471-project-backend.onrender.com/allbooks?sort=createdAt&order=desc`;
                 if (sortOrder) {
-                    url = `https://cse471-project-backend.onrender.com/allbooks?sort=Price&order=${sortOrder}`;
+          
+                    const order = sortOrder === 'asc' ? 'desc' : 'asc';
+                    url = `https://cse471-project-backend.onrender.com/allbooks?sort=Price&order=${order}`;
                 }
                 if (category) {
                     url += `&category=${category}`;
@@ -82,7 +84,6 @@ const Shop = () => {
                     </div>
                 </div>
 
-                {/* Book Cards */}
                 {books.length > 0 ? (
                     <BookCards books={books} />
                 ) : (
