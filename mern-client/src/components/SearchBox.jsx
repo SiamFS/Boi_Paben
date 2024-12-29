@@ -10,7 +10,7 @@ const SearchBox = () => {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:1526/search/${title}`)
+    fetch(`https://cse471-project-backend.onrender.com/search/${title}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error('Failed to fetch search results');
