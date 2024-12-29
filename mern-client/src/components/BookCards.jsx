@@ -14,54 +14,69 @@ const BookCard = ({ headline, books }) => {
   const [availableBooks, setAvailableBooks] = useState([]);
 
   useEffect(() => {
-    if (user) {
+    if (!user) {
+      setUserCart([]);
+    }
+    if (user?.email) {
       fetch(`http://localhost:1526/cart/${user.email}`)
         .then((res) => res.json())
         .then((data) => setUserCart(data))
         .catch((error) => console.error('Error fetching cart data:', error));
     }
-    
-    // Filter out sold books
     const filteredBooks = books.filter(book => book.availability !== "sold");
     setAvailableBooks(filteredBooks);
-  }, [user, books]);
+  }, [user, books]); 
 
   const addToCart = (e, book) => {
     e.preventDefault();
 
-    if (user) {
-      if (userCart.some(item => item._id === book._id)) {
-        alert('This book is already in your cart.');
-        return;
-      }
-
-      const cartItem = {
-        ...book,
-        user_email: user.email,
-      };
-
-      fetch('http://localhost:1526/cart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cartItem),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            setUserCart(prevCart => [...prevCart, cartItem]);
-          } else {
-            alert(data.message || 'Failed to add book to cart');
-          }
-        })
-        .catch((error) => {
-          console.error('Error adding to cart:', error);
-          alert('An error occurred while adding the book to cart');
-        });
-    } else {
+    if (!user?.email) {
       alert('You need to be logged in to add items to the cart');
+      return;
     }
+
+    // Check if book is already in cart using original_id from book._id
+    const isInCart = userCart.some(item => item.original_id === book._id);
+    if (isInCart) {
+      alert('This book is already in your cart.');
+      return;
+    }
+
+    // Create cart item with proper _id handling
+    const cartItem = {
+      _id: book._id, // This will be used to create original_id in backend
+      bookTitle: book.bookTitle,
+      authorName: book.authorName,
+      imageURL: book.imageURL,
+      Price: book.Price,
+      category: book.category,
+      user_email: user.email,
+    };
+
+    fetch('http://localhost:1526/cart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(cartItem),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          // Update cart with the returned data which includes proper IDs
+          setUserCart(prevCart => [...prevCart, data.data]);
+        } else {
+          alert(data.message || 'Failed to add book to cart');
+        }
+      })
+      .catch((error) => {
+        console.error('Error adding to cart:', error);
+        alert('An error occurred while adding the book to cart');
+      });
+  };
+
+  const isUserBook = (bookEmail) => {
+    return user?.email && bookEmail === user.email;
   };
 
   return (
@@ -99,9 +114,9 @@ const BookCard = ({ headline, books }) => {
                 onMouseLeave={() => setHoveredBook(null)}
               >
                 <img src={book.imageURL} alt="" className="w-full h-auto" />
-                {book.email === user?.email ? (
+                {isUserBook(book.email) ? (
                   <div>
-                    <div className='absolute top-3 right-3 bg-blue-300 p-2 rounded z-10 '>
+                    <div className='absolute top-3 right-3 bg-blue-300 p-2 rounded z-10'>
                       <FaBook className='w-4 h-4 text-white'/>
                     </div>
                     <div className={`absolute top-3 right-12 bg-blue-300 text-black text-sm rounded-md px-2 py-1 z-20 transform transition-all duration-300 ${hoveredBook === book._id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'}`}>
