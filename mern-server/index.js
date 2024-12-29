@@ -49,8 +49,8 @@ async function run() {
             quantity: 1,
           })),
           mode: 'payment',
-          success_url: `${BASE_URL}/payment-success`, // Redirect user here after success
-          cancel_url: `${BASE_URL}/add-to-payment`,
+          success_url: `https://cse471-project-backend.onrender.com/payment-success`, // Redirect user here after success
+          cancel_url: `https://cse471-project-backend.onrender.com/add-to-payment`, // Redirect user here after cancellation
           metadata: {
             customerEmail: email,
             cartItems: JSON.stringify(items),

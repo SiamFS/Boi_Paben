@@ -21,13 +21,13 @@ const Signup = () => {
 
     try {
       const result = await createUser(email, password, firstName, lastName);
-      setSuccess(result.message);
+      setSuccess(result.message || "Signup successful! Redirecting to login...");
       setTimeout(() => {
         setSuccess("");
         navigate('/login');
       }, 3000);
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.message || "Failed to sign up. Please try again.");
       setTimeout(() => setError(""), 3000);
     }
   };
@@ -35,9 +35,12 @@ const Signup = () => {
   const handleGoogleSignup = async () => {
     try {
       await signInWithGoogle();
-      navigate('/');
-    } catch (error) {
-      setError(error.message);
+      setSuccess("Signup with Google successful!");
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
+    } catch (err) {
+      setError(err.message || "Google signup failed. Please try again.");
       setTimeout(() => setError(""), 3000);
     }
   };
@@ -65,7 +68,7 @@ const Signup = () => {
                   <input id="lastName" name="lastName" type="text" className="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600" placeholder="Last Name" required />
                 </div>
                 <div className="relative">
-                  <input id="email" name="email" type="text" className="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600" placeholder="Email address" required />
+                  <input id="email" name="email" type="email" className="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600" placeholder="Email address" required />
                 </div>
                 <div className="relative">
                   <input id="password" name="password" type="password" className="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600" placeholder="Password" required />
@@ -81,7 +84,7 @@ const Signup = () => {
                 <h1 className="font-bold text-black mb-4">Sign up with Google</h1>
                 <button onClick={handleGoogleSignup} className="text-white rounded-md">
                   <img 
-                    src="/src/assets/google-logo.svg" 
+                    src="https://img.icons8.com/color/48/000000/google-logo.png"
                     alt="Sign up with Google" 
                     style={{ width: '40px', height: '40px' }}
                   />
