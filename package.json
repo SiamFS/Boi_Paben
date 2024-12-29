@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "concurrently": "^7.0.0",
-    "opener": "^1.5.2"
+    "opener": "^1.5.2",
+    "vite": "^5.4.1"
   }
 }
