@@ -81,7 +81,7 @@ const router = createBrowserRouter([
         element: <ManageBooks />,
       },
       {
-        path: "/dashboard/edit-books/:id",
+        path: "/dashboard/edit/:id",
         element: <EditBooks />,
         loader: ({ params }) => fetch(`https://cse471-project-backend.onrender.com/book/${params.id}`),
       },
