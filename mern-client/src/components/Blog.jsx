@@ -10,6 +10,18 @@ const Icon = ({ name }) => {
           <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
         </svg>
       );
+      case "like":
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+          </svg>
+        );
+      case "dislike":
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
+          </svg>
+        );
     default:
       return null;
   }
@@ -26,14 +38,17 @@ const Blog = () => {
   const [editingPost, setEditingPost] = useState(null);
   const { user } = useContext(AuthContext);
   const [editingComment, setEditingComment] = useState(null);
-
+  const [userReactions, setUserReactions] = useState({});
 
   const IMGBB_API_KEY = "47bd3a08478085812d1960523ecd71ba";
 
   useEffect(() => {
     fetchPosts();
+    if (user) {
+      fetchUserReactions();
+    }
     window.scrollTo(0, 0);
-  }, []);
+  }, [user]);
 
   const fetchPosts = async () => {
     setIsLoading(true);
@@ -103,6 +118,56 @@ const Blog = () => {
     } catch (error) {
       console.error("Error creating post:", error);
       setError("Failed to create post. Please try again.");
+    }
+  };
+
+  const fetchUserReactions = async () => {
+    try {
+      const response = await fetch(`http://localhost:1526/posts/reactions/${user.uid}`);
+      if (!response.ok) throw new Error('Failed to fetch reactions');
+      const reactions = await response.json();
+      
+      const reactionMap = {};
+      reactions.forEach(reaction => {
+        reactionMap[reaction.postId] = reaction.type;
+      });
+      setUserReactions(reactionMap);
+    } catch (error) {
+      console.error('Error fetching reactions:', error);
+    }
+  };
+
+  const handleReaction = async (postId, reactionType) => {
+    if (!user) {
+      setError("Please log in to react to posts.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:1526/posts/${postId}/react`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          reactionType
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update reaction');
+      
+      const { post, userReaction } = await response.json();
+      
+      setPosts(posts.map(p => p._id === post._id ? post : p));
+      
+      setUserReactions(prev => ({
+        ...prev,
+        [postId]: userReaction
+      }));
+    } catch (error) {
+      console.error('Error updating reaction:', error);
+      setError('Failed to update reaction. Please try again.');
     }
   };
 
@@ -199,7 +264,6 @@ const Blog = () => {
     }
   };
 
-
   const handleCommentSubmit = async (postId) => {
     if (!user) {
       setError("Please log in to comment.");
@@ -247,10 +311,9 @@ const Blog = () => {
     return <div className="text-center mt-8 text-red-500">{error}</div>;
   }
 
-
   return (
     <div className="max-w-4xl mx-auto p-4 flex-grow mt-[120px] md:mt-[100px]">
-      <h1 className="text-3xl font-bold text-center text-orange-400 ">Book Community Blogs</h1>
+      <h1 className="text-3xl font-bold text-center text-orange-400">Book Community Blogs</h1>
       
       {/* New Post Form */}
       {user ? (
@@ -284,7 +347,7 @@ const Blog = () => {
       ) : (
         <p className="text-center mb-8">Please log in to create a post.</p>
       )}
-
+  
       {/* Posts List */}
       {currentPosts.map((post) => (
         <div key={post._id} className="bg-white shadow-md rounded-lg p-6 mb-6">
@@ -299,13 +362,42 @@ const Blog = () => {
             <img src={post.imageUrl} alt="Post" className="w-70 h-80 mb-4 rounded ml-auto mr-auto" />
           )}
           <p className="mb-4">{post.content}</p>
+          
+          {/* Reactions Section */}
+          <div className="flex items-center space-x-4 mb-4">
+            <button
+              onClick={() => handleReaction(post._id, 'like')}
+              className={`flex items-center space-x-1 px-3 py-1 rounded-lg transition-colors duration-200 ${
+                userReactions[post._id] === 'like' 
+                  ? 'text-blue-500 bg-blue-50' 
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+              disabled={!user}
+            >
+              <Icon name="like" />
+              <span className="font-medium">{post.likes || 0}</span>
+            </button>
+            <button
+              onClick={() => handleReaction(post._id, 'dislike')}
+              className={`flex items-center space-x-1 px-3 py-1 rounded-lg transition-colors duration-200 ${
+                userReactions[post._id] === 'dislike' 
+                  ? 'text-red-500 bg-red-50' 
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+              disabled={!user}
+            >
+              <Icon name="dislike" />
+              <span className="font-medium">{post.dislikes || 0}</span>
+            </button>
+          </div>
+  
           {user && user.firstName + " " + user.lastName === post.author && (
             <div className="mb-4">
               <button onClick={() => setEditingPost(post)} className="mr-2 text-blue-500 hover:text-blue-600">Edit</button>
               <button onClick={() => handleDeletePost(post._id)} className="text-red-500 hover:text-red-600">Delete</button>
             </div>
           )}
-
+  
           {/* Comments */}
           <div className="mt-4">
             <h3 className="font-semibold mb-2">Comments</h3>
@@ -341,7 +433,7 @@ const Blog = () => {
               </div>
             ))}
           </div>
-
+  
           {/* New Comment Form */}
           {user ? (
             <div className="mt-4 flex">
@@ -364,7 +456,7 @@ const Blog = () => {
           )}
         </div>
       ))}
-
+  
       {/* Pagination */}
       <div className="flex justify-center mt-8">
         {Array.from({ length: Math.ceil(posts.length / postsPerPage) }).map((_, index) => (
@@ -379,7 +471,7 @@ const Blog = () => {
           </button>
         ))}
       </div>
-
+  
       {/* Edit Post Modal */}
       {editingPost && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -411,6 +503,6 @@ const Blog = () => {
       )}
     </div>
   );
-};
+}
 
 export default Blog;

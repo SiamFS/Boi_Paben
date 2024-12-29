@@ -1,70 +1,11 @@
-// AddToPayment.jsx
 import React, { useEffect, useState, useContext } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthProvider';
 import { HiTrash } from 'react-icons/hi';
 import { loadStripe } from '@stripe/stripe-js';
 
 const stripePromise = loadStripe('pk_test_51PiZwnGRR4keZPjYev4QMRdtJjbwUM1oNCJW2ZzJ75kE7lg49NHPsoYn6rxibQ4ERYKROtZp5bRJULLrC20P8UZ500NWNb7Fj3');
 
-// PaymentSuccess Component
-export const PaymentSuccess = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
-
-  useEffect(() => {
-    const processPaymentSuccess = async () => {
-      const params = new URLSearchParams(location.search);
-      const sessionId = params.get('session_id');
-
-      if (!sessionId || !user?.email) {
-        navigate('/');
-        return;
-      }
-
-      try {
-        const response = await fetch('http://localhost:1526/manual-payment-success', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            session_id: sessionId,
-            email: user.email
-          }),
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          setTimeout(() => {
-            navigate('/');
-          }, 2000);
-        } else {
-          console.error('Payment processing failed:', result.message);
-          navigate('/add_to_payment');
-        }
-      } catch (error) {
-        console.error('Error processing payment:', error);
-        navigate('/add_to_payment');
-      }
-    };
-
-    processPaymentSuccess();
-  }, [location, user, navigate]);
-
-  return (
-    <div className="h-screen flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4">Processing Payment...</h2>
-        <p>Please wait while we confirm your payment.</p>
-      </div>
-    </div>
-  );
-};
-
-// Main AddToPayment Component
 const AddToPayment = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -78,7 +19,7 @@ const AddToPayment = () => {
   });
   const [addressError, setAddressError] = useState('');
   const [orderConfirmed, setOrderConfirmed] = useState(false);
-  const [checkoutWarning, setCheckoutWarning] = useState('');
+  const [checkoutWarning, setCheckoutWarning] = useState(''); // Warning for sold items or empty cart
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -127,7 +68,7 @@ const AddToPayment = () => {
       return;
     }
 
-    setCheckoutWarning('');
+    setCheckoutWarning(''); 
     setIsModalOpen(true);
   };
 
@@ -138,13 +79,20 @@ const AddToPayment = () => {
 
   const handleStripePayment = async () => {
     const stripe = await stripePromise;
-
+  
     try {
+      // Format items with proper price handling
       const formattedItems = cartItems.map(item => ({
         ...item,
-        Price: parseFloat(item.Price || 0).toFixed(2)
+        Price: parseFloat(item.Price || 0).toFixed(2) // Ensure price is a valid number
       }));
-
+  
+      // Validate that all items have valid prices
+      const invalidItems = formattedItems.filter(item => isNaN(parseFloat(item.Price)));
+      if (invalidItems.length > 0) {
+        throw new Error('Some items have invalid prices');
+      }
+  
       const response = await fetch('http://localhost:1526/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -152,31 +100,32 @@ const AddToPayment = () => {
         },
         body: JSON.stringify({
           items: formattedItems,
-          email: user.email
+          email: user.email,
         }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to create checkout session');
       }
-
+  
       const session = await response.json();
-      
       const result = await stripe.redirectToCheckout({
         sessionId: session.id,
       });
-
+  
       if (result.error) {
         throw new Error(result.error.message);
       }
     } catch (error) {
       console.error('Error in Stripe payment:', error);
+      // You might want to show this error to the user through your UI
       setCheckoutWarning(error.message || 'Payment processing failed. Please try again.');
     }
   };
 
   const handleCashOnDelivery = async () => {
+    // Validate address fields
     if (!address.streetAddress || !address.cityTown || !address.district || !address.zipCode || !address.contactNumber) {
       setAddressError('All address fields are required');
       return;
@@ -201,6 +150,7 @@ const AddToPayment = () => {
 
     if (response.ok) {
       setOrderConfirmed(true);
+      // Remove items from cart
       cartItems.forEach(item => handleRemoveItem(item._id));
       setTimeout(() => {
         setOrderConfirmed(false);
@@ -220,10 +170,10 @@ const AddToPayment = () => {
     });
   };
 
+
   return (
     <div className='pt-28 px-4 lg:px-24'>
       <div className='flex flex-col lg:flex-row'>
-        {/* Cart Items Section */}
         <div className='lg:w-3/4 p-4'>
           {cartItems.length === 0 ? (
             <div className="pl-20 pt-10 text-3xl text-center font-bold text-black">
@@ -257,8 +207,6 @@ const AddToPayment = () => {
             </div>
           )}
         </div>
-
-        {/* Order Summary Section */}
         <div className='lg:w-1/4 p-4 border rounded shadow-lg lg:ml-4'>
           <h2 className='text-3xl lg:text-5xl font-bold mb-4'>Order Summary</h2>
           <p className='text-xl mb-2'>Subtotal: {totalPrice.toFixed(2)} BDT</p>
@@ -277,7 +225,6 @@ const AddToPayment = () => {
         </div>
       </div>
 
-      {/* Payment Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg max-w-md w-full">
@@ -296,8 +243,6 @@ const AddToPayment = () => {
                 Cash on Delivery
               </button>
             </div>
-
-            {/* Address Form for Cash on Delivery */}
             {paymentMethod === 'cash' && (
               <div className="mt-4">
                 <input
@@ -343,8 +288,6 @@ const AddToPayment = () => {
                 {addressError && <p className="text-red-600">{addressError}</p>}
               </div>
             )}
-
-            {/* Payment Action Buttons */}
             <div className="mt-6 flex justify-end">
               {paymentMethod === 'card' ? (
                 <button
@@ -366,7 +309,6 @@ const AddToPayment = () => {
         </div>
       )}
 
-      {/* Order Confirmation Modal */}
       {orderConfirmed && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg max-w-md w-full text-center">

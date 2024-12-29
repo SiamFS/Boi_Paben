@@ -3,19 +3,21 @@ import App from "../App";
 import Home from "../home/home";
 import Shop from "../shop/shop";
 import About from "../components/about";
+import Blog from "../components/Blog";
+import SingleBook from "../shop/singlebook";
 import DashboardLayout from "../Dashboard/DashboardLayout";
+import Dashboard from "../Dashboard/Dashboard";
 import UploadBook from "../Dashboard/UploadBook";
-import SignUp from "../components/Signup";
-import Login from "../components/Login";
-import Logout from "../components/logout";
-import SearchBox from "../components/SearchBox"; 
-import ForgotPassword from "../components/FogotPassword";
 import ManageBooks from "../Dashboard/ManageBooks";
 import EditBooks from "../Dashboard/EditBooks";
-import SingleBook from "../shop/singlebook";
-import AddToPayment from "../shop/add_to_payment";
-import Blog from "../components/Blog";
-
+import SignUp from "../components/Signup";
+import Login from "../components/Login";
+import PrivateRoute from "../PrivateRoute/PrivateRoute";
+import Logout from "../components/logout";
+import SearchBox from "../components/SearchBox";
+import AddToPayment from "../shop/add_to_payment"; 
+import ForgotPassword from "../components/FogotPassword";
+import PaymentSuccess from "../components/PaymentSucess";
 
 const router = createBrowserRouter([
   {
@@ -35,22 +37,26 @@ const router = createBrowserRouter([
         element: <About />,
       },
       {
+        path: "/blog",
+        element: <Blog />,
+      },
+      {
+        path: "/book/:id",
+        element: <SingleBook />,
+        loader: ({ params }) => fetch(`http://localhost:1526/book/${params.id}`),
+      },
+      {
         path: "/search/:title",
         element: <SearchBox />,
         loader: ({ params }) => fetch(`http://localhost:1526/search/${params.title}`),
       },
       {
-        path: '/book/:id',
-        element: <SingleBook />,
-        loader: ({ params }) => fetch(`http://localhost:1526/book/${params.id}`), 
+        path: "/add-to-payment",
+        element: <AddToPayment />, 
       },
       {
-        path: '/add-to-payment',
-        element: <AddToPayment />,
-      },
-      {
-        path: "/blog",
-        element: <Blog />,
+        path: "/payment-success",
+        element: <PaymentSuccess />,
       }
     ],
   },
@@ -59,7 +65,12 @@ const router = createBrowserRouter([
     element: <DashboardLayout />,
     children: [
       {
-        path: "/dashboard", 
+        path: "/dashboard",
+        element: (
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
+        ),
       },
       {
         path: "/dashboard/upload",
@@ -70,10 +81,10 @@ const router = createBrowserRouter([
         element: <ManageBooks />,
       },
       {
-        path: "/dashboard/edit/:id",
-        element: <EditBooks/>,
+        path: "/dashboard/edit-books/:id",
+        element: <EditBooks />,
         loader: ({ params }) => fetch(`http://localhost:1526/book/${params.id}`),
-      }
+      },
     ],
   },
   {

@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthProvider';
 import { HiShoppingCart, HiExclamationCircle } from 'react-icons/hi';
+
 const SingleBook = () => {
   const navigate = useNavigate();
   const {
@@ -45,6 +46,7 @@ const SingleBook = () => {
         .catch(error => console.error('Error fetching user cart:', error));
     }
   }, [user, _id]);
+
   const handleReport = async () => {
     if (!reportReason) {
       setReportMessage('Please select a reason for reporting.');
@@ -96,6 +98,7 @@ const SingleBook = () => {
       alert('Please log in to report this book.');
     }
   };
+
   const addToCart = () => {
     if (user) {
       if (inCart) {
@@ -136,6 +139,7 @@ const SingleBook = () => {
       alert('You need to be logged in to add items to the cart');
     }
   };
+
   return (
     <div className="flex min-h-screen pt-[80px] md:pt-[40px] bg-gray-100 flex-grow mt-[100px] md:mt-[80px]">
       <div className="flex-grow">
@@ -145,7 +149,7 @@ const SingleBook = () => {
               <div className="md:flex-shrink-0 md:w-1/3">
                 <img className="w-full object-cover" src={imageURL} alt={bookTitle} />
                 <div className="p-4 space-y-3 flex flex-col items-center">
-                  {email === user?.email ? (
+                  {user && email === user.email ? (
                     <button
                       className="w-1/2 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-400 cursor-not-allowed"
                       disabled
@@ -213,9 +217,10 @@ const SingleBook = () => {
                     )}
                   </dl>
                 </div>
-                <div className="mt-6 text-gray-500"><p>Book Description</p>
+                <div className="mt-6 text-gray-500">
+                  <p>Book Description</p>
                   <p className="mt-2 text-lg text-gray-900">{bookDescription}</p>
-                </div>  
+                </div>
               </div>
             </div>
           </div>
