@@ -23,7 +23,7 @@ const BookCard = ({ headline, books }) => {
         .then((data) => setUserCart(data))
         .catch((error) => console.error('Error fetching cart data:', error));
     }
-    const filteredBooks = books.filter(book => book.availability !== "sold");
+    const filteredBooks = books.filter(book => book.availability !== "sold").reverse();
     setAvailableBooks(filteredBooks);
   }, [user, books]); 
 
