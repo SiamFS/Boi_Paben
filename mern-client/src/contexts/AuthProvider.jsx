@@ -1,14 +1,16 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { auth, db } from '../firebase/firebase.config';
-import { 
-  createUserWithEmailAndPassword, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
   sendEmailVerification,
-  updateProfile
+  updateProfile,
+  linkWithCredential,
+  EmailAuthProvider
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -26,7 +28,7 @@ const AuthProvider = ({ children }) => {
       displayName: `${firstName} ${lastName}`,
       photoURL: "https://i.ibb.co/yWjpDXh/image.png"
     });
-    
+
     await setDoc(doc(db, "users", userCredential.user.uid), {
       firstName,
       lastName,
@@ -35,38 +37,50 @@ const AuthProvider = ({ children }) => {
       createdAt: serverTimestamp(),
       role: 'user'
     });
-    
+
     return userCredential.user;
   };
 
   const login = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    
+
     if (!userCredential.user.emailVerified) {
       await sendEmailVerification(userCredential.user);
       throw new Error('Please verify your email. A verification link has been sent.');
     }
-    
+
     await setDoc(doc(db, "users", userCredential.user.uid), {
       lastLoginAt: serverTimestamp()
     }, { merge: true });
-    
+
     return userCredential.user;
   };
 
   const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
-    const nameParts = result.user.displayName?.split(" ") || ['User'];
-    
-    await setDoc(doc(db, "users", result.user.uid), {
-      firstName: nameParts[0],
-      lastName: nameParts.slice(1).join(" ") || '',
-      email: result.user.email,
-      photoURL: result.user.photoURL || '',
-      lastLoginAt: serverTimestamp()
-    }, { merge: true });
-    
+    const userDocRef = doc(db, "users", result.user.uid);
+    const userSnapshot = await getDoc(userDocRef);
+
+    if (!userSnapshot.exists()) {
+      const nameParts = result.user.displayName?.split(" ") || ['User'];
+      await setDoc(userDocRef, {
+        firstName: nameParts[0],
+        lastName: nameParts.slice(1).join(" ") || '',
+        email: result.user.email,
+        photoURL: result.user.photoURL || '',
+        createdAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp()
+      });
+    } else {
+      await setDoc(userDocRef, { lastLoginAt: serverTimestamp() }, { merge: true });
+    }
+
     return result.user;
+  };
+
+  const linkAccounts = async (email, password) => {
+    const credential = EmailAuthProvider.credential(email, password);
+    await linkWithCredential(auth.currentUser, credential);
   };
 
   const logout = () => signOut(auth);
@@ -96,7 +110,8 @@ const AuthProvider = ({ children }) => {
     createUser,
     login,
     logout,
-    signInWithGoogle
+    signInWithGoogle,
+    linkAccounts
   };
 
   return (

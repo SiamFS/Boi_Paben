@@ -6,14 +6,13 @@ import { auth } from '../firebase/firebase.config';
 import { sendEmailVerification } from 'firebase/auth';
 
 const Login = () => {
-  const { login, signInWithGoogle } = useContext(AuthContext);
+  const { login, signInWithGoogle, linkAccounts } = useContext(AuthContext);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
-
 
   useEffect(() => {
     if (success) {
@@ -29,14 +28,14 @@ const Login = () => {
     setError("");
     setSuccess("");
     setLoading(true);
-    
+
     const form = event.target;
     const email = form.email.value;
     const password = form.password.value;
 
     try {
       const userCredential = await login(email, password);
-      
+
       if (!userCredential?.emailVerified) {
         await sendEmailVerification(auth.currentUser);
         setLoading(false);
@@ -51,7 +50,9 @@ const Login = () => {
       console.error("Login error:", err);
       if (err.message?.includes("verify")) {
         setError(err.message);
-      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+      } else if (err.code === 'auth/user-not-found') {
+        setError("No account found. Consider linking accounts.");
+      } else if (err.code === 'auth/wrong-password') {
         setError("Invalid email or password");
       } else {
         setError("An error occurred during login. Please try again.");
@@ -90,77 +91,64 @@ const Login = () => {
             <div>
               <h1 className="text-2xl font-semibold">Login</h1>
             </div>
-            <div className="divide-y divide-gray-200">
-              <form
-                onSubmit={handleLogin}
-                className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7"
-              >
-                <div className="relative">
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    className="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600 transition-colors duration-200"
-                    placeholder="Email address"
-                    required
-                  />
-                </div>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    className="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600 transition-colors duration-200"
-                    placeholder="Password"
-                    required
-                  />
-                </div>
-                <p>
-                  <Link to="/forgot-password" className="text-orange-400 hover:text-orange-500 transition-colors duration-200">
-                    Forgot Password?
-                  </Link>
-                </p>
-                <p>
-                  If you haven't an account, please{" "}
-                  <Link to="/signup" className="text-orange-400 hover:text-orange-500 transition-colors duration-200">
-                    Sign Up
-                  </Link>{" "}
-                  here.
-                </p>
-                <div className="relative">
-                  <button 
-                    type="submit" 
-                    className={`bg-orange-400 text-white rounded-md px-4 py-2 hover:bg-orange-500 transition-colors duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={loading}
-                  >
-                    {loading ? 'Logging in...' : 'Log In'}
-                  </button>
-                </div>
-                {error && (
-                  <div className="text-red-500 bg-red-50 p-3 rounded-md transition-all duration-200">
-                    {error}
-                  </div>
-                )}
-                {success && (
-                  <div className="text-green-500 bg-green-50 p-3 rounded-md transition-all duration-200">
-                    {success}
-                  </div>
-                )}
-              </form>
-              <div className="flex flex-col items-center mt-6">
-                <h1 className="font-bold text-black mb-4">Sign in with Google</h1>
-                <button 
-                  onClick={handleGoogleLogin} 
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 disabled:opacity-50"
+            <form onSubmit={handleLogin} className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
+              <div className="relative">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  className="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600 transition-colors duration-200"
+                  placeholder="Email address"
+                  required
+                />
+              </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  className="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600 transition-colors duration-200"
+                  placeholder="Password"
+                  required
+                />
+              </div>
+              <p>
+                <Link to="/forgot-password" className="text-orange-400 hover:text-orange-500 transition-colors duration-200">
+                  Forgot Password?
+                </Link>
+              </p>
+              <p>
+                If you haven't an account, please{" "}
+                <Link to="/signup" className="text-orange-400 hover:text-orange-500 transition-colors duration-200">
+                  Sign Up
+                </Link>{" "}
+                here.
+              </p>
+              <div className="relative">
+                <button
+                  type="submit"
+                  className={`bg-orange-400 text-white rounded-md px-4 py-2 hover:bg-orange-500 transition-colors duration-200 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={loading}
                 >
-                  <img
-                    src="https://img.icons8.com/color/48/000000/google-logo.png"
-                    alt="Sign in with Google"
-                    className="w-10 h-10"
-                  />
+                  {loading ? 'Logging in...' : 'Log In'}
                 </button>
               </div>
+              {error && <div className="text-red-500 bg-red-50 p-3 rounded-md">{error}</div>}
+              {success && <div className="text-green-500 bg-green-50 p-3 rounded-md">{success}</div>}
+            </form>
+            <div className="flex flex-col items-center mt-6">
+              <h1 className="font-bold text-black mb-4">Sign in with Google</h1>
+              <button
+                onClick={handleGoogleLogin}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 disabled:opacity-50"
+                disabled={loading}
+              >
+                <img
+                  src="https://img.icons8.com/color/48/000000/google-logo.png"
+                  alt="Sign in with Google"
+                  className="w-10 h-10"
+                />
+              </button>
             </div>
           </div>
         </div>
