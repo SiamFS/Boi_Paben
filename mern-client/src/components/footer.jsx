@@ -41,7 +41,7 @@ const ModernFooter = () => {
               <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300">
                 <BsTwitter size={20} />
               </a>
-              <a href="https://github.com/SiamFS/Boi_Paben_CSE470_Project.git" className="text-gray-400 hover:text-white transition-colors duration-300">
+              <a href="https://github.com/SiamFS/CSE471_Project.git" className="text-gray-400 hover:text-white transition-colors duration-300">
                 <BsGithub size={20} />
               </a>
             </div>
