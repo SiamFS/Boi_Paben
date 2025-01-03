@@ -10,7 +10,8 @@ import {
   sendEmailVerification,
   updateProfile,
   linkWithCredential,
-  EmailAuthProvider
+  EmailAuthProvider,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -46,6 +47,7 @@ const AuthProvider = ({ children }) => {
 
     if (!userCredential.user.emailVerified) {
       await sendEmailVerification(userCredential.user);
+      await signOut(auth);
       throw new Error('Please verify your email. A verification link has been sent.');
     }
 
@@ -69,13 +71,18 @@ const AuthProvider = ({ children }) => {
         email: result.user.email,
         photoURL: result.user.photoURL || '',
         createdAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp()
+        lastLoginAt: serverTimestamp(),
+        role: 'user'
       });
     } else {
       await setDoc(userDocRef, { lastLoginAt: serverTimestamp() }, { merge: true });
     }
 
     return result.user;
+  };
+
+  const resetPassword = async (email) => {
+    await sendPasswordResetEmail(auth, email);
   };
 
   const linkAccounts = async (email, password) => {
@@ -111,7 +118,8 @@ const AuthProvider = ({ children }) => {
     login,
     logout,
     signInWithGoogle,
-    linkAccounts
+    linkAccounts,
+    resetPassword
   };
 
   return (
