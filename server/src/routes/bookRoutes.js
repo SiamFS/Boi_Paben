@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import { bookController } from '../controllers/bookController.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -21,6 +21,16 @@ const handleValidationErrors = (req, res, next) => {
   }
   next();
 };
+
+// Recommendation routes
+router.get('/recommendations', optionalAuth, asyncHandler(bookController.getRecommendations));
+router.get('/latest', asyncHandler(bookController.getLatestBooks));
+router.get('/:id/similar', asyncHandler(bookController.getSimilarBooks));
+router.post('/personalized', authenticate, asyncHandler(bookController.getPersonalizedRecommendations));
+
+// Development route to seed sample data
+router.post('/seed', asyncHandler(bookController.seedSampleData));
+router.delete('/clear', asyncHandler(bookController.clearSampleData));
 
 router.get('/all', asyncHandler(bookController.getAllBooks));
 router.get('/search/:query', asyncHandler(bookController.searchBooks));

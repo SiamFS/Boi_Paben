@@ -17,12 +17,10 @@ export const connectDB = async () => {
       minPoolSize: 5,
       maxIdleTimeMS: 60000,
       waitQueueTimeoutMS: 5000
-    });
-
-    await client.connect();
+    });    await client.connect();
     console.log('MongoDB connected successfully');
     
-    db = client.db('coverbook');
+    db = client.db('boipaben');
     return db;
   } catch (error) {
     console.error('MongoDB connection failed:', error);

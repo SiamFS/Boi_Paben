@@ -12,6 +12,7 @@ import cartRoutes from './routes/cartRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 export const createServer = async () => {
   const app = express();
@@ -41,10 +42,9 @@ export const createServer = async () => {
   });
 
   app.use('/api/', limiter);
-
   app.get('/', (req, res) => {
     res.json({ 
-      message: 'CoverBook API', 
+      message: 'BoiPaben API', 
       version: '1.0.0',
       status: 'active' 
     });
@@ -52,6 +52,7 @@ export const createServer = async () => {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/books', bookRoutes);
+  app.use('/api/search', searchRoutes);
   app.use('/api/cart', cartRoutes);
   app.use('/api/payments', paymentRoutes);
   app.use('/api/blog', blogRoutes);

@@ -1,89 +1,190 @@
-# Boi Paben - Book Buy-and-Sell Community
+# BoiPaben - Book Marketplace Platform
 
-## About
-Boi Paben is a multi-vendor book marketplace where users can buy and sell books and communicate with each other. The platform supports both online payments through Stripe and Cash on Delivery (COD) options.
-
-**Live Demo:** [https://cse471-project-frontend.onrender.com/](https://cse471-project-frontend.onrender.com/)
+A full-stack MERN application for buying and selling books with community features.
 
 ## Features
-- User authentication with buyer and seller roles
-- Book listing, browsing, and purchasing features
-- Community features for user interaction
-- Online payments via Stripe integration
-- Cash on Delivery payment option
 
-## Technology Stack
-- Frontend: React, React Hooks
-- Backend: Node.js, Express.js
-- Database: MongoDB
-- Authentication: Firebase
-- Payment: Stripe
-- Deployment: Render
+- 🔐 **Authentication**: Email/password and Google OAuth with Firebase
+- 📚 **Book Management**: Upload, edit, and manage book listings
+- 🛒 **Shopping Cart**: Persistent cart with real-time updates
+- 💳 **Payment Processing**: Stripe integration and Cash on Delivery
+- 📝 **Blog System**: Community blog with reactions and comments
+- 🌓 **Dark Mode**: Toggle between light and dark themes
+- 📱 **Responsive Design**: Mobile-first approach
+- 🔍 **Search & Filter**: Advanced search and category filtering
 
-## Getting Started
+## Tech Stack
+
+### Frontend
+- React 18 with Vite
+- Tailwind CSS for styling
+- React Query for server state
+- Zustand for client state
+- React Hook Form + Zod for validation
+- Framer Motion for animations
+- Stripe.js for payments
+
+### Backend
+- Node.js with Express
+- MongoDB with native driver
+- JWT authentication
+- Stripe payment processing
+- Express Rate Limiting
+- Helmet for security
+
+## Project Structure
+
+```
+boipaben/
+├── client/                # Frontend React app
+│   ├── src/
+│   │   ├── components/   # Reusable UI components
+│   │   ├── features/     # Feature modules
+│   │   ├── lib/          # Utilities and helpers
+│   │   └── styles/       # Global styles
+│   └── .env.local        # Frontend environment variables
+├── server/                # Backend Express app
+│   ├── src/
+│   │   ├── config/       # Configuration files
+│   │   ├── controllers/  # Route controllers
+│   │   ├── middleware/   # Custom middleware
+│   │   ├── routes/       # API routes
+│   │   └── utils/        # Utility functions
+│   └── .env              # Backend environment variables
+└── README.md
+```
+
+## Installation
 
 ### Prerequisites
-- Node.js
-- npm
+- Node.js 18+ 
+- MongoDB Atlas account
+- Firebase project
+- Stripe account
+- ImgBB API key
 
-### Installation
-
-Clone the repository:
-```bash
-git clone https://github.com/SiamFS/Boi_Paben.git
-cd Boi_Paben
-```
-
-The project has two main directories:
-- `mern-client`: Frontend React application
-- `mern-server`: Backend Node.js application
-
-Install dependencies for both client and server:
+### Backend Setup
 
 ```bash
-# Install dependencies in the client directory
-cd mern-client
-npm install
-
-# Install dependencies in the server directory
-cd ../mern-server
+cd server
 npm install
 ```
 
-### Running the Application
+Create `.env` file with the provided environment variables.
 
-Start the client:
+### Frontend Setup
+
 ```bash
-# In the mern-client directory
-npm start
+cd client
+npm install
 ```
 
-Start the server:
+Create `.env.local` file with the provided environment variables.
+
+## Development
+
+### Run Backend
 ```bash
-# In the mern-server directory
-npm start
+cd server
+npm run dev
 ```
 
-The client will be available at http://localhost:3000 and the server at http://localhost:5000 (or whatever port is configured).
-
-### Starting from Root Directory
-
-From the root directory, you can start both client and server using:
+### Run Frontend
 ```bash
-npm start
+cd client
+npm run dev
 ```
 
-### Environment Variables
-The application does not require setting up .env files as all necessary configurations are included in the code for testing purposes.
+## Deployment
 
-## Usage
-- Register as a user
-- Browse available books
-- List your own books for sale
-- Purchase books using Stripe or choose Cash on Delivery
-- Communicate with other users regarding books
+### Backend on Render
 
-## Contact
-- Email: siamferdous1@gmail.com
-- GitHub: [SiamFS](https://github.com/SiamFS)
-- LinkedIn: [Siam Ferdous](https://www.linkedin.com/in/siam-ferdous-75219b280/)
+1. Create a new Web Service
+2. Connect your GitHub repository
+3. Set build command: `npm install`
+4. Set start command: `npm start`
+5. Add all environment variables from `.env`
+6. Deploy
+
+### Frontend on Render
+
+1. Create a new Static Site
+2. Connect your GitHub repository
+3. Set build command: `cd client && npm install && npm run build`
+4. Set publish directory: `client/dist`
+5. Add all environment variables from `.env.local`
+6. Deploy
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/verify-firebase` - Verify Firebase token
+
+### Books
+- `GET /api/books/all` - Get all books
+- `GET /api/books/:id` - Get book by ID
+- `POST /api/books/upload` - Upload new book
+- `PATCH /api/books/:id` - Update book
+- `DELETE /api/books/:id` - Delete book
+
+### Cart
+- `GET /api/cart` - Get user cart
+- `POST /api/cart/add` - Add to cart
+- `DELETE /api/cart/:id` - Remove from cart
+
+### Payments
+- `POST /api/payments/create-checkout-session` - Create Stripe session
+- `POST /api/payments/cash-on-delivery` - Process COD order
+
+### Blog
+- `GET /api/blog/posts` - Get all posts
+- `POST /api/blog/posts` - Create post
+- `POST /api/blog/posts/:id/react` - React to post
+- `POST /api/blog/posts/:id/comments` - Add comment
+
+## Environment Variables
+
+### Backend (.env)
+- `NODE_ENV` - Production/development
+- `PORT` - Server port
+- `MONGODB_URI` - MongoDB connection string
+- `JWT_SECRET` - JWT signing secret
+- `STRIPE_SECRET_KEY` - Stripe secret key
+- `CLIENT_URL` - Frontend URL
+- `IMGBB_API_KEY` - ImgBB API key
+
+### Frontend (.env.local)
+- `VITE_API_URL` - Backend API URL
+- `VITE_FIREBASE_*` - Firebase configuration
+- `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe public key
+- `VITE_IMGBB_API_KEY` - ImgBB API key
+
+## Security Features
+
+- JWT token authentication
+- Input validation and sanitization
+- Rate limiting on API routes
+- Secure headers with Helmet
+- CORS configuration
+- Environment-based secrets
+
+## Performance Optimizations
+
+- Lazy loading for routes
+- Image optimization with ImgBB
+- Query caching with React Query
+- Code splitting with dynamic imports
+- Database connection pooling
+- Debounced search
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License.
