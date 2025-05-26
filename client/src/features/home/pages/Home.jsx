@@ -1,11 +1,11 @@
-import SimpleBanner from '@/components/home/SimpleBanner';
+import Banner from '../components/Banner';
 import CategoryBooks from '../components/CategoryBooks';
 import LatestBooks from '../components/LatestBooks';
 
 export default function Home() {
   return (
     <div className="pt-16">
-      <SimpleBanner />
+      <Banner />
       <CategoryBooks />
       <LatestBooks />
     </div>

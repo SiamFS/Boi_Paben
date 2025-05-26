@@ -20,7 +20,7 @@ export const connectDB = async () => {
     });    await client.connect();
     console.log('MongoDB connected successfully');
     
-    db = client.db('boipaben');
+    db = client.db('coverbook');
     return db;
   } catch (error) {
     console.error('MongoDB connection failed:', error);

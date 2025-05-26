@@ -1,8 +1,8 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { asyncHandler } from '../middleware/asyncHandler.js';
-import { AuthService } from '../services/authService.js';
 import { authenticate } from '../middleware/auth.js';
+import { getCollection } from '../config/database.js';
 
 const router = express.Router();
 
@@ -17,17 +17,36 @@ router.post('/verify-firebase', asyncHandler(async (req, res) => {
   }
 
   try {
-    // Verify and cache user with database integration
-    const userData = await AuthService.verifyAndCacheUser(user);
+    // Store user in database if not exists
+    const usersCollection = getCollection('users');
+    let dbUser = await usersCollection.findOne({ uid: user.uid });
+      
+    if (!dbUser) {
+      // Create new user
+      const newUser = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        role: 'user',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await usersCollection.insertOne(newUser);
+      dbUser = newUser;
+    }
     
     const tokenPayload = {
-      uid: userData.uid,
-      email: userData.email,
-      displayName: userData.displayName,
-      photoURL: userData.photoURL,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      role: userData.role
+      uid: dbUser.uid,
+      email: dbUser.email,
+      displayName: dbUser.displayName,
+      photoURL: dbUser.photoURL,
+      firstName: dbUser.firstName,
+      lastName: dbUser.lastName,
+      role: dbUser.role || 'user'
     };
 
     const token = jwt.sign(
@@ -55,7 +74,26 @@ router.put('/profile', authenticate, asyncHandler(async (req, res) => {
   const updates = req.body;
   
   try {
-    await AuthService.updateUserProfile(uid, updates);
+    const usersCollection = getCollection('users');
+    
+    // Only update allowed fields
+    const allowedUpdates = {
+      displayName: updates.displayName,
+      firstName: updates.firstName,
+      lastName: updates.lastName,
+      photoURL: updates.photoURL,
+      updatedAt: new Date()
+    };
+    
+    // Remove undefined values
+    Object.keys(allowedUpdates).forEach(key => 
+      allowedUpdates[key] === undefined && delete allowedUpdates[key]
+    );
+    
+    await usersCollection.updateOne(
+      { uid },
+      { $set: allowedUpdates }
+    );
     
     res.json({
       success: true,
@@ -74,9 +112,7 @@ router.post('/logout', authenticate, asyncHandler(async (req, res) => {
   const { uid } = req.user;
   
   try {
-    // Clear user cache on logout
-    AuthService.clearUserCache(uid);
-    
+    // Nothing to do here since we're not using caching anymore
     res.json({
       success: true,
       message: 'Logged out successfully'

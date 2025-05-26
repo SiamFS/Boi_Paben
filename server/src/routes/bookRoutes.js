@@ -28,10 +28,6 @@ router.get('/latest', asyncHandler(bookController.getLatestBooks));
 router.get('/:id/similar', asyncHandler(bookController.getSimilarBooks));
 router.post('/personalized', authenticate, asyncHandler(bookController.getPersonalizedRecommendations));
 
-// Development route to seed sample data
-router.post('/seed', asyncHandler(bookController.seedSampleData));
-router.delete('/clear', asyncHandler(bookController.clearSampleData));
-
 router.get('/all', asyncHandler(bookController.getAllBooks));
 router.get('/search/:query', asyncHandler(bookController.searchBooks));
 router.get('/category/:category', asyncHandler(bookController.getBooksByCategory));
