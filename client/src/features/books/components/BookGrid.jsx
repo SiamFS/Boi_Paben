@@ -1,5 +1,6 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Navigation } from 'swiper/modules';
+import PropTypes from 'prop-types';
 import BookCard from './BookCard';
 import BookCardSkeleton from './BookCardSkeleton';
 import 'swiper/css';
@@ -8,18 +9,28 @@ import 'swiper/css/navigation';
 
 export default function BookGrid({ books, loading, view = 'carousel' }) {
   if (loading) {
+    // Define container class based on view
+    let containerClass = '';
+    if (view === 'grid') {
+      containerClass = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6';
+    } else if (view === 'list') {
+      containerClass = 'space-y-4';
+    }
+
     return (
-      <div className={view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6' : ''}>
+      <div className={containerClass}>
         {view === 'carousel' ? (
           <div className="flex gap-6 overflow-hidden">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="min-w-[240px]">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div key={`skeleton-carousel-${index}`} className="min-w-[240px]">
                 <BookCardSkeleton />
               </div>
             ))}
           </div>
         ) : (
-          [...Array(10)].map((_, i) => <BookCardSkeleton key={i} />)
+          Array.from({ length: view === 'list' ? 6 : 10 }, (_, index) => (
+            <BookCardSkeleton key={`skeleton-${view}-${index}`} listView={view === 'list'} />
+          ))
         )}
       </div>
     );
@@ -38,6 +49,16 @@ export default function BookGrid({ books, loading, view = 'carousel' }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {books.map((book) => (
           <BookCard key={book._id} book={book} />
+        ))}
+      </div>
+    );
+  }
+
+  if (view === 'list') {
+    return (
+      <div className="space-y-4">
+        {books.map((book) => (
+          <BookCard key={book._id} book={book} listView />
         ))}
       </div>
     );
@@ -66,3 +87,15 @@ export default function BookGrid({ books, loading, view = 'carousel' }) {
     </Swiper>
   );
 }
+
+BookGrid.propTypes = {
+  books: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    bookTitle: PropTypes.string.isRequired,
+    authorName: PropTypes.string.isRequired,
+    imageURL: PropTypes.string.isRequired,
+    Price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  })).isRequired,
+  loading: PropTypes.bool,
+  view: PropTypes.oneOf(['carousel', 'grid', 'list']),
+};

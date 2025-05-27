@@ -21,7 +21,9 @@ export default function Search() {
     minPrice: '',
     maxPrice: '',
     condition: ''
-  });  useEffect(() => {
+  });
+
+  useEffect(() => {
     if (urlQuery) {
       setSearchTerm(urlQuery);
       performSearch(urlQuery);
@@ -36,6 +38,11 @@ export default function Search() {
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
+        // Fallback categories
+        setCategories([
+          'Fiction', 'Non-Fiction', 'Science', 'Technology', 'History',
+          'Biography', 'Self-Help', 'Children', 'Art', 'Religion'
+        ]);
       }
     };
     
@@ -47,17 +54,11 @@ export default function Search() {
     
     setLoading(true);
     try {
-      // Save search to recent searches
-      const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-      const newRecent = [query, ...recent.filter(item => item !== query)].slice(0, 10);
-      localStorage.setItem('recentSearches', JSON.stringify(newRecent));
-
       const response = await apiClient.get(`/api/books/search/${query}`, {
         params: { ...filterParams }
       });
       
-      const results = response.data || [];
-      setSearchResults(results);
+      setSearchResults(response.data || []);
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
@@ -81,59 +82,44 @@ export default function Search() {
     performSearch(searchTerm);
     setShowFilters(false);
   };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gray-50 dark:bg-gray-900"
+      className="container py-8"
     >
-      {/* Header Section with Search */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="container py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-light text-gray-900 dark:text-gray-100 mb-2">
-              {searchResults.length > 0
-                ? `Search Results for "${searchTerm}"`
-                : 'Search Books'}
-            </h1>
-            {searchResults.length > 0 && (
-              <p className="text-gray-600 dark:text-gray-400">
-                Found {searchResults.length} results
-              </p>
-            )}
-          </div>
-          
-          {/* Centered Search Bar */}
-          <div className="flex justify-center mb-6">
-            <SearchBar
-              autoFocus
-              size="large"
-              placeholder="Search books, authors, categories..."
-              onSearch={(searchQuery) => {
-                setSearchTerm(searchQuery);
-                performSearch(searchQuery, filters);
-              }}
-            />
-          </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-6">
+          {searchResults.length > 0
+            ? `Search Results for "${searchTerm}"`
+            : 'Search Books'}
+        </h1>
 
-          {/* Filter Toggle */}
-          <div className="flex justify-center">
-            <Button
-              type="button"
-              variant="outline"
-              className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </Button>          </div>
+        <div className="space-y-4">
+          <SearchBar
+            autoFocus
+            onSearch={(searchQuery) => {
+              setSearchTerm(searchQuery);
+              performSearch(searchQuery, filters);
+            }}
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </Button>
 
           {showFilters && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-4 p-4 border rounded-lg dark:border-gray-700"
+              className="p-4 border rounded-lg dark:border-gray-700"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
@@ -156,9 +142,9 @@ export default function Search() {
                 </div>
 
                 <div>
-                  <label htmlFor="min-price-filter" className="block text-sm font-medium mb-1">Min Price</label>
+                  <label htmlFor="min-price" className="block text-sm font-medium mb-1">Min Price</label>
                   <input
-                    id="min-price-filter"
+                    id="min-price"
                     type="number"
                     value={filters.minPrice}
                     onChange={(e) =>
@@ -170,9 +156,9 @@ export default function Search() {
                 </div>
 
                 <div>
-                  <label htmlFor="max-price-filter" className="block text-sm font-medium mb-1">Max Price</label>
+                  <label htmlFor="max-price" className="block text-sm font-medium mb-1">Max Price</label>
                   <input
-                    id="max-price-filter"
+                    id="max-price"
                     type="number"
                     value={filters.maxPrice}
                     onChange={(e) =>
@@ -220,28 +206,27 @@ export default function Search() {
             </motion.div>
           )}
         </div>
-      </div>      {/* Results Section */}
-      <div className="container py-8">
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }, (_, index) => (
-              <div
-                key={`skeleton-${index}`}
-                className="h-64 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"
-              ></div>
-            ))}
-          </div>
-        ) : searchResults.length > 0 ? (
-        <BookGrid books={searchResults} />
-              ) : (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-medium mb-2">No books found</h2>
-            <p className="text-muted-foreground">
-              Try adjusting your search or filters to find what you're looking for.
-            </p>
-          </div>
-        )}
       </div>
+
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }, (_, index) => (
+            <div
+              key={`skeleton-${index}`}
+              className="h-64 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"
+            />
+          ))}
+        </div>
+      ) : searchResults.length > 0 ? (
+        <BookGrid books={searchResults} />
+      ) : (
+        <div className="text-center py-12">
+          <h2 className="text-xl font-medium mb-2">No books found</h2>
+          <p className="text-muted-foreground">
+            Try adjusting your search or filters to find what you're looking for.
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 }

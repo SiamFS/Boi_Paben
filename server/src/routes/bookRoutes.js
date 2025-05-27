@@ -29,7 +29,9 @@ router.get('/:id/similar', asyncHandler(bookController.getSimilarBooks));
 router.post('/personalized', authenticate, asyncHandler(bookController.getPersonalizedRecommendations));
 
 router.get('/all', asyncHandler(bookController.getAllBooks));
+router.get('/categories', asyncHandler(bookController.getCategories));
 router.get('/search/:query', asyncHandler(bookController.searchBooks));
+router.get('/suggestions/:query', asyncHandler(bookController.getSearchSuggestions));
 router.get('/category/:category', asyncHandler(bookController.getBooksByCategory));
 router.get('/user/:email', authenticate, asyncHandler(bookController.getUserBooks));
 router.get('/:id', asyncHandler(bookController.getBookById));

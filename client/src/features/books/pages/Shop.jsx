@@ -87,16 +87,14 @@ export default function Shop() {
               List
             </Button>
           </div>
-        </div>
-
-        {availableBooks.length === 0 && !isLoading ? (
+        </div>        {availableBooks.length === 0 && !isLoading ? (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">
               No books found in this category
             </p>
           </div>
         ) : (
-          <BookGrid books={availableBooks} loading={isLoading} view="grid" />
+          <BookGrid books={availableBooks} loading={isLoading} view={view} />
         )}
       </div>
     </div>

@@ -483,5 +483,145 @@ export const bookController = {
         error: 'Failed to clear sample data'
       });
     }
+  },
+
+  async getSearchSuggestions(req, res) {
+    const { query } = req.params;
+    const { limit = 10 } = req.query;
+    const bookCollection = getCollection('books');
+    
+    try {
+      if (!query || query.trim().length < 2) {
+        return res.json({ success: true, suggestions: [] });
+      }
+
+      // Get unique suggestions from book titles, authors, and categories
+      const titleSuggestions = await bookCollection
+        .aggregate([
+          {
+            $match: {
+              bookTitle: { $regex: query, $options: 'i' },
+              status: { $ne: 'deleted' }
+            }
+          },
+          {
+            $group: {
+              _id: '$bookTitle',
+              count: { $sum: 1 }
+            }
+          },
+          { $sort: { count: -1 } },
+          { $limit: Math.floor(limit / 3) }
+        ])
+        .toArray();
+
+      const authorSuggestions = await bookCollection
+        .aggregate([
+          {
+            $match: {
+              authorName: { $regex: query, $options: 'i' },
+              status: { $ne: 'deleted' }
+            }
+          },
+          {
+            $group: {
+              _id: '$authorName',
+              count: { $sum: 1 }
+            }
+          },
+          { $sort: { count: -1 } },
+          { $limit: Math.floor(limit / 3) }
+        ])
+        .toArray();
+
+      const categorySuggestions = await bookCollection
+        .aggregate([
+          {
+            $match: {
+              category: { $regex: query, $options: 'i' },
+              status: { $ne: 'deleted' }
+            }
+          },
+          {
+            $group: {
+              _id: '$category',
+              count: { $sum: 1 }
+            }
+          },
+          { $sort: { count: -1 } },
+          { $limit: Math.floor(limit / 3) }
+        ])
+        .toArray();
+
+      // Combine and format suggestions
+      const suggestions = [
+        ...titleSuggestions.map(item => ({
+          text: item._id,
+          type: 'title',
+          count: item.count
+        })),
+        ...authorSuggestions.map(item => ({
+          text: item._id,
+          type: 'author',
+          count: item.count
+        })),
+        ...categorySuggestions.map(item => ({
+          text: item._id,
+          type: 'category',
+          count: item.count
+        }))
+      ]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+
+      res.json({
+        success: true,
+        suggestions
+      });
+    } catch (error) {
+      console.error('Error getting search suggestions:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get search suggestions'
+      });
+    }
+  },
+
+  async getCategories(req, res) {
+    const bookCollection = getCollection('books');
+    
+    try {
+      const categories = await bookCollection
+        .aggregate([
+          {
+            $match: {
+              status: { $ne: 'deleted' }
+            }
+          },
+          {
+            $group: {
+              _id: '$category',
+              count: { $sum: 1 }
+            }
+          },
+          {
+            $sort: { count: -1 }
+          }
+        ])
+        .toArray();
+
+      const categoryList = categories.map(cat => cat._id).filter(Boolean);
+      
+      res.json({
+        success: true,
+        categories: categoryList
+      });
+    } catch (error) {
+      console.error('Error getting categories:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get categories'
+      });
+    }
   }
 };
