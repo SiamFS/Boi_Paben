@@ -14,9 +14,15 @@ export default function Blog() {
   const [editingPost, setEditingPost] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [], isLoading, error } = useQuery({
     queryKey: ['posts'],
     queryFn: blogService.getAllPosts,
+    retry: 3,
+    retryDelay: 1000,
+    onError: (error) => {
+      console.error('Failed to fetch posts:', error);
+      toast.error('Failed to load blog posts');
+    },
   });
 
   const createPostMutation = useMutation({
@@ -26,7 +32,8 @@ export default function Blog() {
       setShowPostForm(false);
       toast.success('Post created successfully');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Failed to create post:', error);
       toast.error('Failed to create post');
     },
   });
@@ -38,7 +45,8 @@ export default function Blog() {
       setEditingPost(null);
       toast.success('Post updated successfully');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Failed to update post:', error);
       toast.error('Failed to update post');
     },
   });
@@ -49,7 +57,8 @@ export default function Blog() {
       queryClient.invalidateQueries(['posts']);
       toast.success('Post deleted successfully');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Failed to delete post:', error);
       toast.error('Failed to delete post');
     },
   });
@@ -67,6 +76,25 @@ export default function Blog() {
       deletePostMutation.mutate(id);
     }
   };
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="pt-20 min-h-screen">
+        <div className="container py-8">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
+            <p className="text-muted-foreground mb-6">
+              Failed to load blog posts. Please try again later.
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Reload Page
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-20 min-h-screen">
@@ -118,8 +146,8 @@ export default function Blog() {
 
         {isLoading ? (
           <div className="grid gap-6">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="card p-6">
+            {Array.from({ length: 3 }, (_, index) => (
+              <div key={`skeleton-post-${index}`} className="card p-6">
                 <div className="skeleton h-6 w-3/4 mb-4" />
                 <div className="skeleton h-4 w-full mb-2" />
                 <div className="skeleton h-4 w-5/6" />
@@ -132,14 +160,34 @@ export default function Blog() {
           </div>
         ) : (
           <div className="grid gap-6">
-            {posts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={post}
-                onEdit={setEditingPost}
-                onDelete={handleDeletePost}
-              />
-            ))}
+            {posts.map((post) => {
+              // Ensure post has required properties with fallbacks
+              const postWithDefaults = {
+                _id: post._id,
+                title: post.title || 'Untitled',
+                content: post.content || '',
+                author: post.author || 'Anonymous',
+                authorId: post.authorId || '',
+                authorPhoto: post.authorPhoto || null,
+                createdAt: post.createdAt || new Date().toISOString(),
+                imageUrl: post.imageUrl || null,
+                likes: post.likes || 0,
+                dislikes: post.dislikes || 0,
+                comments: post.comments || [],
+                userReaction: post.userReaction || null,
+                edited: post.edited || false,
+                ...post
+              };
+
+              return (
+                <PostCard
+                  key={post._id}
+                  post={postWithDefaults}
+                  onEdit={setEditingPost}
+                  onDelete={handleDeletePost}
+                />
+              );
+            })}
           </div>
         )}
       </div>

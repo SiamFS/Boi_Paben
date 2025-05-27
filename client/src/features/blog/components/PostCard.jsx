@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ThumbsUp, ThumbsDown, MessageSquare, Edit, Trash2, Send } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { blogService } from '../services/blogService';
@@ -173,13 +174,12 @@ export default function PostCard({ post, onEdit, onDelete }) {
         {showComments && (
           <div className="border-t pt-4 space-y-4">
             {user && (
-              <div className="flex gap-2">
-                <input
+              <div className="flex gap-2">                <input
                   type="text"
                   placeholder="Add a comment..."
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
                   className="input flex-1"
                 />
                 <Button
@@ -261,3 +261,29 @@ export default function PostCard({ post, onEdit, onDelete }) {
     </motion.div>
   );
 }
+
+PostCard.propTypes = {
+  post: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    content: PropTypes.string.isRequired,
+    author: PropTypes.string.isRequired,
+    authorId: PropTypes.string.isRequired,
+    authorPhoto: PropTypes.string,
+    createdAt: PropTypes.string.isRequired,
+    imageUrl: PropTypes.string,
+    likes: PropTypes.number,
+    dislikes: PropTypes.number,
+    comments: PropTypes.arrayOf(PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      content: PropTypes.string.isRequired,
+      author: PropTypes.string.isRequired,
+      authorPhoto: PropTypes.string,
+      createdAt: PropTypes.string.isRequired,
+    })),
+    userReaction: PropTypes.string,
+    edited: PropTypes.bool,
+  }).isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+};

@@ -23,9 +23,8 @@ export default function BannerCarousel() {
           disableOnInteraction: false,
         }}
         className="w-full h-full"
-      >
-        {bookImages.map((image, index) => (
-          <SwiperSlide key={index} className="rounded-2xl overflow-hidden">
+      >        {bookImages.map((image, index) => (
+          <SwiperSlide key={image} className="rounded-2xl overflow-hidden">
             <img
               src={image}
               alt={`Book ${index + 1}`}
