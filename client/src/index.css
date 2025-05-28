@@ -104,9 +104,26 @@
   .card {
     @apply rounded-lg border bg-card text-card-foreground shadow-sm;
   }
-
   .input {
     @apply flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Dark mode enhancements for form inputs */
+  .dark .input {
+    @apply bg-gray-800 border-gray-600 text-white placeholder:text-gray-400;
+  }
+
+  .dark .input:focus {
+    @apply border-primary ring-primary/20;
+  }
+
+  .dark select option {
+    @apply bg-gray-800 text-white;
+  }
+
+  /* File input styling improvements */
+  .dark input[type="file"]::-webkit-file-upload-button {
+    @apply bg-gray-700 text-white border-gray-600 rounded-md px-3 py-1 text-sm hover:bg-gray-600 transition-colors;
   }
 
   .label {
@@ -142,5 +159,35 @@
 
   .glass-effect {
     @apply backdrop-blur-md bg-white/70 dark:bg-black/70 border border-white/20 dark:border-white/10;
+  }
+
+  /* Shimmer animation for loading skeletons */
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Enhanced loading animations */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

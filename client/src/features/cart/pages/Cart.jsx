@@ -90,9 +90,7 @@ export default function Cart() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCashOnDelivery = async () => {
+  };  const handleCashOnDelivery = async () => {
     if (!address.streetAddress || !address.cityTown || !address.district || !address.contactNumber) {
       toast.error('Please fill all required fields');
       return;
@@ -107,6 +105,9 @@ export default function Cart() {
       });
 
       if (response.data.success) {
+        // Clear cart after successful order
+        await fetchCart(); // This will refresh the cart from server (items should be cleared)
+        setShowCheckoutModal(false); // Close the modal
         toast.success('Order placed successfully!');
         setTimeout(() => {
           navigate('/');

@@ -18,12 +18,13 @@ export default function SearchBar({
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-
   // Extract query from URL if we're on search page
   useEffect(() => {
     if (location.pathname.includes('/search/')) {
       const urlQuery = decodeURIComponent(location.pathname.split('/search/')[1] || '');
       setQuery(urlQuery);
+      // Don't show suggestions automatically when loading from URL
+      setShowSuggestions(false);
     }
   }, [location.pathname]);
 
@@ -33,26 +34,29 @@ export default function SearchBar({
       handleSearch(query.trim());
     }
   };
-
   const handleSearch = (searchQuery) => {
     if (onSearch) {
       onSearch(searchQuery);
     } else {
-      navigate(`/books/search/${encodeURIComponent(searchQuery)}`);
+      navigate(`/search/${encodeURIComponent(searchQuery)}`);
     }
     setShowSuggestions(false);
     inputRef.current?.blur();
   };
-
   const handleInputChange = (e) => {
     const value = e.target.value;
     setQuery(value);
-    setShowSuggestions(true);
+    // Only show suggestions if user is actively typing (not when loading from URL)
+    if (isFocused) {
+      setShowSuggestions(value.length > 0);
+    }
   };
-
   const handleInputFocus = () => {
     setIsFocused(true);
-    setShowSuggestions(true);
+    // Only show suggestions if user explicitly focuses, not from URL pre-loading
+    if (!location.pathname.includes('/search/') || query !== decodeURIComponent(location.pathname.split('/search/')[1] || '')) {
+      setShowSuggestions(true);
+    }
   };
 
   const handleInputBlur = () => {

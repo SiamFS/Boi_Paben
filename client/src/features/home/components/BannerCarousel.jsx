@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCards, Autoplay } from 'swiper/modules';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { filterPublicBooks } from '@/lib/utils';
 import recommendationService from '@/services/recommendationService';
 import 'swiper/css';
 import 'swiper/css/effect-cards';
@@ -16,22 +17,25 @@ const fallbackImages = [
   'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=600&fit=crop',
 ];
 
-export default function BannerCarousel() {
-  const { user } = useAuth();
-  const [displayBooks, setDisplayBooks] = useState([]);
-
-  const { data: bannerBooks = [], isLoading } = useQuery({
+export default function BannerCarousel() {  const { user } = useAuth();
+  const [displayBooks, setDisplayBooks] = useState([]);  const { data: bannerBooks = [], isLoading } = useQuery({
     queryKey: ['bannerBooks', user?.uid],
     queryFn: () => recommendationService.getBannerBooks(5),
     staleTime: 30 * 60 * 1000, // 30 minutes
     cacheTime: 60 * 60 * 1000, // 1 hour
+    retry: false, // Don't retry on failure - we'll fall back to images
+    suspense: false, // Don't use suspense boundary
+    enabled: true, // Always enabled
   });
-
-  useEffect(() => {
+    useEffect(() => {
+    // Only update display books when bannerBooks changes
     if (bannerBooks.length > 0) {
-      setDisplayBooks(bannerBooks);
-    } else {
-      // Fallback to placeholder images
+      // Filter out old sold books from banner
+      const filteredBooks = filterPublicBooks(bannerBooks);
+      // Update state only if the filtered books are different
+      setDisplayBooks(filteredBooks);
+    } else if (displayBooks.length === 0) {
+      // Fallback to placeholder images only if we haven't set them already
       setDisplayBooks(
         fallbackImages.map((image, index) => ({
           _id: `fallback-${index}`,
@@ -40,7 +44,7 @@ export default function BannerCarousel() {
         }))
       );
     }
-  }, [bannerBooks]);
+  }, [bannerBooks]); // Remove displayBooks from the dependency array
 
   if (isLoading) {
     return (

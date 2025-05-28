@@ -1,14 +1,30 @@
 import { ObjectId } from 'mongodb';
 import { getCollection } from '../config/database.js';
+import { validateBookData, checkRateLimit } from '../utils/validation.js';
 
 export const bookController = {
   async getAllBooks(req, res) {
-    const { category, sort, order, limit = 0 } = req.query;
+    const { category, sort, order, limit = 0, includeRecentlySold = false, includeSellerView = false } = req.query;
     const bookCollection = getCollection('books');
     
     let query = {};
     if (category) {
       query.category = category;
+    }
+
+    // For seller dashboard view, show all their books
+    if (includeSellerView && req.user?.email) {
+      query.email = req.user.email;
+    } else if (!includeRecentlySold) {
+      // Filter out sold books older than 12 hours for public view
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+      query.$or = [
+        { availability: 'available' },
+        { 
+          availability: 'sold',
+          soldAt: { $gt: twelveHoursAgo }
+        }
+      ];
     }
 
     const sortOptions = {};
@@ -43,68 +59,137 @@ export const bookController = {
 
     res.json(book);
   },
-
   async uploadBook(req, res) {
-    const bookCollection = getCollection('books');
-    const bookData = {
-      ...req.body,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      availability: 'available'
-    };
+    try {
+      // Extract email from request body or user context
+      const userEmail = req.body.email || req.user?.email;
+      
+      if (!userEmail) {
+        return res.status(400).json({
+          success: false,
+          error: 'User email is required'
+        });
+      }
 
-    const result = await bookCollection.insertOne(bookData);
-    const newBook = await bookCollection.findOne({ _id: result.insertedId });
+      // Check rate limiting
+      const rateLimitCheck = checkRateLimit(userEmail);
+      if (!rateLimitCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: rateLimitCheck.error,
+          retryAfter: rateLimitCheck.resetTime
+        });
+      }
 
-    res.status(201).json({
-      success: true,
-      message: 'Book uploaded successfully',
-      data: newBook
-    });
+      // Validate and sanitize book data
+      const validation = validateBookData(req.body);
+      
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: validation.errors
+        });
+      }
+
+      const bookCollection = getCollection('books');
+      
+      // Prepare book data with sanitized values
+      const bookData = {
+        ...validation.sanitizedData,
+        email: userEmail,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        availability: 'available'
+      };
+
+      const result = await bookCollection.insertOne(bookData);
+      const newBook = await bookCollection.findOne({ _id: result.insertedId });
+
+      res.status(201).json({
+        success: true,
+        message: 'Book uploaded successfully',
+        data: newBook
+      });
+    } catch (error) {
+      console.error('Upload book error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  },  async updateBook(req, res) {
+    try {
+      const { id } = req.params;
+      
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ error: 'Invalid book ID' });
+      }
+
+      const bookCollection = getCollection('books');
+      const book = await bookCollection.findOne({ _id: new ObjectId(id) });
+
+      if (!book) {
+        return res.status(404).json({ error: 'Book not found' });
+      }
+
+      // Check ownership
+      const userEmail = req.body.userEmail || req.user?.email;
+      if (book.email !== userEmail) {
+        return res.status(403).json({ error: 'Unauthorized to update this book' });
+      }
+
+      // Prevent editing sold books
+      if (book.availability === 'sold') {
+        return res.status(400).json({ error: 'Cannot edit sold books' });
+      }
+
+      // Validate and sanitize the updated data
+      const validation = validateBookData(req.body);
+      
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: validation.errors
+        });
+      }
+
+      // Prepare update data with sanitized values
+      const updateData = {
+        ...validation.sanitizedData,
+        updatedAt: new Date()
+      };
+      
+      // Remove fields that shouldn't be updated
+      delete updateData._id;
+      delete updateData.userEmail;
+      delete updateData.email; // Preserve original email
+      delete updateData.createdAt; // Preserve creation date
+
+      const result = await bookCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData }
+      );
+
+      if (result.modifiedCount === 0) {
+        return res.status(400).json({ error: 'No changes made' });
+      }
+
+      const updatedBook = await bookCollection.findOne({ _id: new ObjectId(id) });
+      res.json({
+        success: true,
+        message: 'Book updated successfully',
+        data: updatedBook
+      });
+    } catch (error) {
+      console.error('Update book error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
   },
-
-  async updateBook(req, res) {
-    const { id } = req.params;
-    
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid book ID' });
-    }
-
-    const bookCollection = getCollection('books');
-    const book = await bookCollection.findOne({ _id: new ObjectId(id) });
-
-    if (!book) {
-      return res.status(404).json({ error: 'Book not found' });
-    }
-
-    if (book.email !== req.body.userEmail && book.email !== req.user?.email) {
-      return res.status(403).json({ error: 'Unauthorized to update this book' });
-    }
-
-    const updateData = {
-      ...req.body,
-      updatedAt: new Date()
-    };
-    delete updateData._id;
-    delete updateData.userEmail;
-
-    const result = await bookCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: updateData }
-    );
-
-    if (result.modifiedCount === 0) {
-      return res.status(400).json({ error: 'No changes made' });
-    }
-
-    const updatedBook = await bookCollection.findOne({ _id: new ObjectId(id) });
-    res.json({
-      success: true,
-      message: 'Book updated successfully',
-      data: updatedBook
-    });
-  },
-
   async deleteBook(req, res) {
     const { id } = req.params;
     
@@ -123,6 +208,11 @@ export const bookController = {
       return res.status(403).json({ error: 'Unauthorized to delete this book' });
     }
 
+    // Prevent deleting sold books
+    if (book.availability === 'sold') {
+      return res.status(400).json({ error: 'Cannot delete sold books' });
+    }
+
     const result = await bookCollection.deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
@@ -133,39 +223,104 @@ export const bookController = {
       success: true,
       message: 'Book deleted successfully'
     });
-  },
-
-  async searchBooks(req, res) {
+  },  async searchBooks(req, res) {
     const { query } = req.params;
+    const { category, minPrice, maxPrice, condition } = req.query;
     const bookCollection = getCollection('books');
     
-    const books = await bookCollection
-      .find({
-        $or: [
-          { bookTitle: { $regex: query, $options: 'i' } },
-          { authorName: { $regex: query, $options: 'i' } },
-          { category: { $regex: query, $options: 'i' } }
+    try {
+      // Filter out sold books older than 12 hours for public search
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+      
+      // Build search criteria
+      const searchCriteria = {
+        $and: [
+          {
+            $or: [
+              { bookTitle: { $regex: query, $options: 'i' } },
+              { authorName: { $regex: query, $options: 'i' } },
+              { category: { $regex: query, $options: 'i' } }
+            ]
+          },
+          {
+            $or: [
+              { availability: 'available' },
+              { 
+                availability: 'sold',
+                soldAt: { $gt: twelveHoursAgo }
+              }
+            ]
+          }
         ]
-      })
-      .limit(50)
-      .toArray();
+      };
 
-    res.json(books);
+      // Add filter criteria
+      const additionalFilters = [];
+      
+      if (category && category.trim()) {
+        additionalFilters.push({ category: { $regex: category, $options: 'i' } });
+      }
+      
+      if (minPrice && !isNaN(parseFloat(minPrice))) {
+        additionalFilters.push({ Price: { $gte: parseFloat(minPrice) } });
+      }
+      
+      if (maxPrice && !isNaN(parseFloat(maxPrice))) {
+        additionalFilters.push({ Price: { $lte: parseFloat(maxPrice) } });
+      }
+      
+      if (condition && condition.trim()) {
+        additionalFilters.push({ productCondition: { $regex: condition, $options: 'i' } });
+      }
+
+      // Add filters to search criteria
+      if (additionalFilters.length > 0) {
+        searchCriteria.$and.push(...additionalFilters);
+      }
+
+      const books = await bookCollection
+        .find(searchCriteria)
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .toArray();
+
+      res.json({
+        success: true,
+        books: books,
+        count: books.length
+      });
+    } catch (error) {
+      console.error('Search error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to search books'
+      });
+    }
   },
-
   async getBooksByCategory(req, res) {
     const { category } = req.params;
     const bookCollection = getCollection('books');
     
+    // Filter out sold books older than 12 hours for public category browsing
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    
     const books = await bookCollection
-      .find({ category })
+      .find({ 
+        category,
+        $or: [
+          { availability: 'available' },
+          { 
+            availability: 'sold',
+            soldAt: { $gt: twelveHoursAgo }
+          }
+        ]
+      })
       .sort({ createdAt: -1 })
       .limit(100)
       .toArray();
 
     res.json(books);
   },
-
   async getUserBooks(req, res) {
     const { email } = req.params;
     
@@ -174,6 +329,7 @@ export const bookController = {
     }
 
     const bookCollection = getCollection('books');
+    // For seller dashboard, show all books including sold ones
     const books = await bookCollection
       .find({ email })
       .sort({ createdAt: -1 })
@@ -232,14 +388,25 @@ export const bookController = {
       });
     }
   },
-
   async getLatestBooks(req, res) {
     const { limit = 10 } = req.query;
     const bookCollection = getCollection('books');
     
     try {
+      // Filter out sold books older than 12 hours for latest books section
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+      
       const latestBooks = await bookCollection
-        .find({ status: { $ne: 'deleted' } })
+        .find({ 
+          status: { $ne: 'deleted' },
+          $or: [
+            { availability: 'available' },
+            { 
+              availability: 'sold',
+              soldAt: { $gt: twelveHoursAgo }
+            }
+          ]
+        })
         .sort({ createdAt: -1 })
         .limit(parseInt(limit))
         .toArray();

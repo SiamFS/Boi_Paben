@@ -7,7 +7,8 @@ import { z } from 'zod';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { bookService } from '@/features/books/services/bookService';
 import BookForm from '../components/BookForm';
-import LoadingScreen from '@/components/ui/LoadingScreen';
+import { FormLoadingSkeleton } from '@/components/ui/LoadingComponents';
+import ServerErrorHandler from '@/components/ui/ServerErrorHandler';
 import toast from 'react-hot-toast';
 
 const bookSchema = z.object({
@@ -33,10 +34,16 @@ export default function EditBook() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
-
-  const { data: book, isLoading } = useQuery({
+  const { data: book, isLoading, error, refetch } = useQuery({
     queryKey: ['book', id],
     queryFn: () => bookService.getBookById(id),
+    retry: (failureCount, error) => {
+      if (error?.code === 'NETWORK_ERROR' || error?.status >= 500) {
+        return failureCount < 2;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
   });
 
   const {
@@ -49,7 +56,31 @@ export default function EditBook() {
     values: book,
   });
 
-  if (isLoading) return <LoadingScreen />;
+    if (error) {
+    return (
+      <ServerErrorHandler 
+        error={error}
+        onRetry={refetch}
+        title="Failed to load book details"
+        description="We couldn't fetch the book information. This might be due to server maintenance."
+      />
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Edit Book</h1>
+          <div className="bg-muted rounded-lg px-4 py-2">
+            <p className="text-sm text-muted-foreground">Seller</p>
+            <p className="font-medium">{user?.displayName || user?.email}</p>
+          </div>
+        </div>
+        <FormLoadingSkeleton />
+      </div>
+    );
+  }
 
   if (!book) {
     return (

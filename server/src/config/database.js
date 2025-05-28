@@ -40,6 +40,13 @@ export const getCollection = (collectionName) => {
   return database.collection(collectionName);
 };
 
+export const getClient = () => {
+  if (!client) {
+    throw new Error('Database client not initialized');
+  }
+  return client;
+};
+
 export const closeDB = async () => {
   if (client) {
     await client.close();

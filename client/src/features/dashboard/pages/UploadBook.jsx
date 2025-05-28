@@ -2,29 +2,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { bookService } from '@/features/books/services/bookService';
 import { bookCategories } from '@/lib/utils';
+import { 
+  createBookValidationSchema,
+  sanitizeText,
+  validateImageFile 
+} from '@/lib/validation';
 import BookForm from '../components/BookForm';
 import toast from 'react-hot-toast';
 
-const bookSchema = z.object({
-  bookTitle: z.string().min(3, 'Title must be at least 3 characters'),
-  authorName: z.string().min(2, 'Author name must be at least 2 characters'),
-  category: z.string().min(1, 'Please select a category'),
-  Price: z.string().min(1, 'Price is required'),
-  bookDescription: z.string().min(20, 'Description must be at least 20 characters'),
-  authenticity: z.string(),
-  productCondition: z.string(),
-  publisher: z.string().optional(),
-  edition: z.string().optional(),
-  streetAddress: z.string().min(5, 'Street address is required'),
-  cityTown: z.string().min(2, 'City/Town is required'),
-  district: z.string().min(2, 'District is required'),
-  zipCode: z.string().optional(),
-  contactNumber: z.string().min(10, 'Valid contact number is required'),
-});
+const bookSchema = createBookValidationSchema();
 
 export default function UploadBook() {
   const { user } = useAuth();
@@ -44,10 +33,16 @@ export default function UploadBook() {
       productCondition: 'New',
     },
   });
-
   const onSubmit = async (data) => {
     if (!imageFile) {
       toast.error('Please select a book image');
+      return;
+    }
+
+    // Validate image file
+    const imageErrors = validateImageFile(imageFile);
+    if (imageErrors.length > 0) {
+      toast.error(imageErrors[0]);
       return;
     }
 
@@ -55,8 +50,26 @@ export default function UploadBook() {
     try {
       const imageUrl = await bookService.uploadImage(imageFile);
       
+      // Sanitize all text inputs
+      const sanitizedData = {
+        bookTitle: sanitizeText(data.bookTitle),
+        authorName: sanitizeText(data.authorName),
+        bookDescription: sanitizeText(data.bookDescription),
+        publisher: data.publisher ? sanitizeText(data.publisher) : '',
+        edition: data.edition ? sanitizeText(data.edition) : '',
+        streetAddress: sanitizeText(data.streetAddress),
+        cityTown: sanitizeText(data.cityTown),
+        district: sanitizeText(data.district),
+        zipCode: data.zipCode ? sanitizeText(data.zipCode) : '',
+        contactNumber: sanitizeText(data.contactNumber),
+        category: data.category,
+        Price: data.Price,
+        authenticity: data.authenticity,
+        productCondition: data.productCondition,
+      };
+      
       const bookData = {
-        ...data,
+        ...sanitizedData,
         imageURL: imageUrl,
         email: user.email,
         seller: user.displayName || `${user.firstName} ${user.lastName}`,
@@ -68,7 +81,7 @@ export default function UploadBook() {
       navigate('/dashboard/manage');
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload book');
+      toast.error(error.response?.data?.message || 'Failed to upload book');
     } finally {
       setLoading(false);
     }

@@ -45,6 +45,29 @@ export function getImageUrl(url) {
   return `${import.meta.env.VITE_API_URL}/${url}`;
 }
 
+// Filter out books that have been sold for more than 12 hours (for public listings)
+export function filterPublicBooks(books, userEmail = null) {
+  return books.filter(book => {
+    // If user is the owner, show all their books (for dashboard)
+    if (userEmail && book.email === userEmail) {
+      return true;
+    }
+    
+    // For public listings, hide books sold more than 12 hours ago
+    if (book.availability === 'sold' && book.soldAt) {
+      const hoursSinceSold = (new Date() - new Date(book.soldAt)) / (1000 * 60 * 60);
+      return hoursSinceSold <= 12;
+    }
+    
+    // Ensure book.Price is a number (not a string)
+    if (book.Price && typeof book.Price === 'string') {
+      book.Price = parseFloat(book.Price);
+    }
+    
+    return true;
+  });
+}
+
 export const bookCategories = [
   'Fiction',
   'Non-Fiction',

@@ -21,11 +21,12 @@ const EditBook = lazy(() => import('@/features/dashboard/pages/EditBook'));
 const Search = lazy(() => import('@/features/books/pages/Search'));
 const PaymentSuccess = lazy(() => import('@/features/cart/pages/PaymentSuccess'));
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Layout />,
-    children: [
+const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <Layout />,
+      children: [
       {
         index: true,
         element: <Home />,
@@ -85,8 +86,7 @@ const router = createBrowserRouter([
         element: <EditBook />,
       },
     ],
-  },
-  {
+  },  {
     path: '/login',
     element: <Login />,
   },
@@ -98,6 +98,13 @@ const router = createBrowserRouter([
     path: '/forgot-password',
     element: <ForgotPassword />,
   },
-]);
+], 
+{
+  // Opt into future React Router behavior
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+  }
+});
 
 export default router;

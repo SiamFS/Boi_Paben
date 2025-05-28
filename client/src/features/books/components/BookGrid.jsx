@@ -2,36 +2,28 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Navigation } from 'swiper/modules';
 import PropTypes from 'prop-types';
 import BookCard from './BookCard';
-import BookCardSkeleton from './BookCardSkeleton';
+import { BookGridSkeleton } from '@/components/ui/LoadingComponents';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-export default function BookGrid({ books, loading, view = 'carousel' }) {
+export default function BookGrid({ books, loading, view = 'carousel', error = null }) {
   if (loading) {
     // Define container class based on view
-    let containerClass = '';
     if (view === 'grid') {
-      containerClass = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6';
+      return <BookGridSkeleton count={10} />;
     } else if (view === 'list') {
-      containerClass = 'space-y-4';
+      return <BookGridSkeleton count={6} listView />;
     }
 
+    // Carousel loading
     return (
-      <div className={containerClass}>
-        {view === 'carousel' ? (
-          <div className="flex gap-6 overflow-hidden">
-            {Array.from({ length: 5 }, (_, index) => (
-              <div key={`skeleton-carousel-${index}`} className="min-w-[240px]">
-                <BookCardSkeleton />
-              </div>
-            ))}
+      <div className="flex gap-6 overflow-hidden">
+        {Array.from({ length: 5 }, (_, index) => (
+          <div key={`skeleton-carousel-${index}`} className="min-w-[240px]">
+            <BookGridSkeleton count={1} />
           </div>
-        ) : (
-          Array.from({ length: view === 'list' ? 6 : 10 }, (_, index) => (
-            <BookCardSkeleton key={`skeleton-${view}-${index}`} listView={view === 'list'} />
-          ))
-        )}
+        ))}
       </div>
     );
   }
@@ -98,4 +90,5 @@ BookGrid.propTypes = {
   })).isRequired,
   loading: PropTypes.bool,
   view: PropTypes.oneOf(['carousel', 'grid', 'list']),
+  error: PropTypes.object,
 };

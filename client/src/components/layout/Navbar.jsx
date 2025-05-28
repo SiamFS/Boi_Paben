@@ -16,12 +16,14 @@ import { useTheme } from '@/components/theme/ThemeProvider';
 import { useCartStore } from '@/features/cart/store/cartStore';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import SearchSuggestions from '@/features/books/components/SearchSuggestions';
 
-export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showMobileSuggestions, setShowMobileSuggestions] = useState(false);
   const { user, logout, updateUserProfile } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -122,15 +124,15 @@ export default function Navbar() {
               className="hidden md:inline-flex"
             >
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-            </Button>
-
-            <form onSubmit={handleSearch} className="hidden md:flex">
+            </Button>            <form onSubmit={handleSearch} className="hidden md:flex relative">
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Search books..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   className="input pr-10 w-64"
                 />
                 <button
@@ -139,6 +141,17 @@ export default function Navbar() {
                 >
                   <Search className="h-4 w-4" />
                 </button>
+                {searchQuery && showSuggestions && (
+                  <SearchSuggestions
+                    query={searchQuery}
+                    onSelect={(suggestion) => {
+                      navigate(`/search/${suggestion}`);
+                      setSearchQuery('');
+                      setShowSuggestions(false);
+                    }}
+                    className="absolute top-full left-0 right-0 z-50 mt-1"
+                  />
+                )}
               </div>
             </form>
 
@@ -234,15 +247,15 @@ export default function Navbar() {
                 >
                   {item.label}
                 </Link>
-              ))}
-
-              <form onSubmit={handleSearch} className="px-4">
+              ))}              <form onSubmit={handleSearch} className="px-4">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Search books..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setShowMobileSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowMobileSuggestions(false), 200)}
                     className="input pr-10 w-full"
                   />
                   <button
@@ -251,6 +264,18 @@ export default function Navbar() {
                   >
                     <Search className="h-4 w-4" />
                   </button>
+                  {searchQuery && showMobileSuggestions && (
+                    <SearchSuggestions
+                      query={searchQuery}
+                      onSelect={(suggestion) => {
+                        navigate(`/search/${suggestion}`);
+                        setSearchQuery('');
+                        setIsMenuOpen(false);
+                        setShowMobileSuggestions(false);
+                      }}
+                      className="absolute top-full left-0 right-0 z-50 mt-1"
+                    />
+                  )}
                 </div>
               </form>
 

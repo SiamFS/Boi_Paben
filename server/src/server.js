@@ -6,6 +6,7 @@ import compression from 'compression';
 import { rateLimit } from 'express-rate-limit';
 import { connectDB } from './config/database.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { startScheduler } from './services/scheduler.js';
 import bookRoutes from './routes/bookRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
@@ -17,9 +18,12 @@ export const createServer = async () => {
   const app = express();
 
   await connectDB();
-
+  
+  // Start the scheduler for book cleanup
+  startScheduler();
+  
   const corsOptions = {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: process.env.CLIENT_URL || process.env.CLIENT_URL_LOCAL || 'http://localhost:5173',
     credentials: true,
     optionsSuccessStatus: 200
   };

@@ -2,27 +2,38 @@ import apiClient from '@/lib/api-client';
 
 export const bookService = {
   async getAllBooks(params = {}) {
-    const response = await apiClient.get('/api/books/all', { params });
+    const response = await apiClient.get('/api/books/all', { 
+      params,
+      priority: params.priority || 'low' // Default to low priority for bulk data
+    });
     return response.data;
   },
 
   async getBookById(id) {
-    const response = await apiClient.get(`/api/books/${id}`);
+    const response = await apiClient.get(`/api/books/${id}`, {
+      priority: 'high' // High priority for individual book details
+    });
     return response.data;
   },
 
   async searchBooks(query) {
-    const response = await apiClient.get(`/api/books/search/${query}`);
+    const response = await apiClient.get(`/api/books/search/${query}`, {
+      priority: 'high' // High priority for search results
+    });
     return response.data;
   },
 
   async getBooksByCategory(category) {
-    const response = await apiClient.get(`/api/books/category/${category}`);
+    const response = await apiClient.get(`/api/books/category/${category}`, {
+      priority: 'low' // Low priority for category browsing
+    });
     return response.data;
   },
 
   async getUserBooks(email) {
-    const response = await apiClient.get(`/api/books/user/${email}`);
+    const response = await apiClient.get(`/api/books/user/${email}`, {
+      priority: 'normal' // Normal priority for user's books
+    });
     return response.data;
   },
 

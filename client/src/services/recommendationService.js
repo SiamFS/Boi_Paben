@@ -5,7 +5,6 @@ class RecommendationService {
   constructor() {
     this.cacheTime = 1800; // 30 minutes
   }
-
   async getRecommendations(userId = null, limit = 10) {
     const cacheKey = `recommendations_${userId || 'anonymous'}_${limit}`;
     
@@ -17,7 +16,8 @@ class RecommendationService {
 
     try {
       const response = await apiClient.get('/api/books/recommendations', {
-        params: { userId, limit }
+        params: { userId, limit },
+        priority: 'low' // Non-critical content, use low priority
       });
       
       if (response.data.success) {
@@ -34,7 +34,6 @@ class RecommendationService {
       return await this.getLatestBooks(limit);
     }
   }
-
   async getLatestBooks(limit = 10) {
     const cacheKey = `latest_books_${limit}`;
     
@@ -46,7 +45,8 @@ class RecommendationService {
 
     try {
       const response = await apiClient.get('/api/books/latest', {
-        params: { limit }
+        params: { limit },
+        priority: 'low' // Non-critical content, use low priority
       });
       
       if (response.data.success) {
@@ -60,9 +60,7 @@ class RecommendationService {
       console.error('Error fetching latest books:', error);
       return [];
     }
-  }
-
-  async getBannerBooks(limit = 5) {
+  }  async getBannerBooks(limit = 5) {
     const cacheKey = `banner_books_${limit}`;
     
     // Check cache first
@@ -72,7 +70,7 @@ class RecommendationService {
     }
 
     try {
-      // Try to get featured/recommended books first
+      // Try to get recommended books first
       const recommendations = await this.getRecommendations(null, limit);
       
       if (recommendations && recommendations.length >= limit) {

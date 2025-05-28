@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, X } from 'lucide-react';
 import BookGrid from '../components/BookGrid';
 import SearchBar from '../components/SearchBar';
@@ -21,26 +21,31 @@ export default function Search() {
     minPrice: '',
     maxPrice: '',
     condition: ''
-  });  useEffect(() => {
+  });
+  useEffect(() => {
     if (urlQuery) {
       setSearchTerm(urlQuery);
       performSearch(urlQuery);
     }
-    
-    // Load categories for filter
+  }, [urlQuery]);
+
+  // Separate useEffect for fetching categories only once
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await apiClient.get('/api/books/categories');
-        if (response.data) {
-          setCategories(response.data);
+        if (response.data?.categories) {
+          setCategories(response.data.categories);
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
+        // Set empty array as fallback
+        setCategories([]);
       }
     };
     
     fetchCategories();
-  }, [urlQuery]);
+  }, []); // Empty dependency array means this runs only once
 
   const performSearch = async (query, filterParams = {}) => {
     if (!query) return;
@@ -56,7 +61,7 @@ export default function Search() {
         params: { ...filterParams }
       });
       
-      const results = response.data || [];
+      const results = response.data?.books || response.data || [];
       setSearchResults(results);
     } catch (error) {
       console.error('Search error:', error);
@@ -81,16 +86,72 @@ export default function Search() {
     performSearch(searchTerm);
     setShowFilters(false);
   };
+
+  const renderSearchResults = () => {
+    if (loading) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }, (_, index) => (
+            <div
+              key={`skeleton-${index}`}
+              className="h-64 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (searchResults.length > 0) {
+      return <BookGrid books={searchResults} />;
+    }
+
+    if (searchTerm) {
+      return (
+        <div className="text-center py-16">
+          <div className="max-w-md mx-auto">
+            <h2 className="text-2xl font-medium mb-3 text-gray-900 dark:text-gray-100">
+              No books found
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              We couldn't find any books matching "{searchTerm}". Try adjusting your search or filters.
+            </p>
+            <Button 
+              onClick={() => {
+                setSearchTerm('');
+                setSearchResults([]);
+                clearFilters();
+              }}
+              variant="outline"
+            >
+              Clear Search
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-center py-16">
+        <h2 className="text-xl font-medium mb-2 text-gray-900 dark:text-gray-100">
+          Start your search
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Enter a book title, author, or category to find great books.
+        </p>
+      </div>
+    );
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gray-50 dark:bg-gray-900"
-    >
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header Section with Search */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="container py-8">
-          <div className="text-center mb-8">
+        <div className="container mx-auto px-4 py-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
             <h1 className="text-3xl font-light text-gray-900 dark:text-gray-100 mb-2">
               {searchResults.length > 0
                 ? `Search Results for "${searchTerm}"`
@@ -101,23 +162,25 @@ export default function Search() {
                 Found {searchResults.length} results
               </p>
             )}
-          </div>
+          </motion.div>
           
           {/* Centered Search Bar */}
           <div className="flex justify-center mb-6">
-            <SearchBar
-              autoFocus
-              size="large"
-              placeholder="Search books, authors, categories..."
-              onSearch={(searchQuery) => {
-                setSearchTerm(searchQuery);
-                performSearch(searchQuery, filters);
-              }}
-            />
+            <div className="w-full max-w-2xl">
+              <SearchBar
+                autoFocus
+                size="large"
+                placeholder="Search books, authors, categories..."
+                onSearch={(searchQuery) => {
+                  setSearchTerm(searchQuery);
+                  performSearch(searchQuery, filters);
+                }}
+              />
+            </div>
           </div>
 
           {/* Filter Toggle */}
-          <div className="flex justify-center">
+          <div className="flex justify-center mb-4">
             <Button
               type="button"
               variant="outline"
@@ -126,25 +189,32 @@ export default function Search() {
             >
               <Filter className="w-4 h-4 mr-2" />
               {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </Button>          </div>
+            </Button>
+          </div>
 
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-4 p-4 border rounded-lg dark:border-gray-700"
-            >
+          {/* Filters Section */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="p-6 bg-white dark:bg-gray-800 border rounded-lg border-gray-200 dark:border-gray-700 mx-auto max-w-4xl shadow-sm mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label htmlFor="category-filter" className="block text-sm font-medium mb-1">Category</label>
+                  <label htmlFor="category-filter" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                    Category
+                  </label>
                   <select
                     id="category-filter"
                     value={filters.category}
                     onChange={(e) =>
                       setFilters({ ...filters, category: e.target.value })
                     }
-                    className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full p-3 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">All Categories</option>
                     {categories.map((category) => (
@@ -156,7 +226,9 @@ export default function Search() {
                 </div>
 
                 <div>
-                  <label htmlFor="min-price-filter" className="block text-sm font-medium mb-1">Min Price</label>
+                  <label htmlFor="min-price-filter" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                    Min Price (BDT)
+                  </label>
                   <input
                     id="min-price-filter"
                     type="number"
@@ -164,13 +236,15 @@ export default function Search() {
                     onChange={(e) =>
                       setFilters({ ...filters, minPrice: e.target.value })
                     }
-                    placeholder="Min Price"
-                    className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+                    placeholder="0"
+                    className="w-full p-3 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="max-price-filter" className="block text-sm font-medium mb-1">Max Price</label>
+                  <label htmlFor="max-price-filter" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                    Max Price (BDT)
+                  </label>
                   <input
                     id="max-price-filter"
                     type="number"
@@ -178,20 +252,21 @@ export default function Search() {
                     onChange={(e) =>
                       setFilters({ ...filters, maxPrice: e.target.value })
                     }
-                    placeholder="Max Price"
-                    className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+                    placeholder="10000"
+                    className="w-full p-3 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="condition-filter" className="block text-sm font-medium mb-1">Condition</label>
+                <div>                  <label htmlFor="condition-filter" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                    Condition
+                  </label>
                   <select
                     id="condition-filter"
                     value={filters.condition}
                     onChange={(e) =>
                       setFilters({ ...filters, condition: e.target.value })
                     }
-                    className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full p-3 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Any Condition</option>
                     <option value="New">New</option>
@@ -203,45 +278,40 @@ export default function Search() {
                 </div>
               </div>
 
-              <div className="flex justify-end mt-4 gap-2">
+              <div className="flex justify-end mt-6 gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={clearFilters}
-                  className="flex items-center"
+                  className="flex items-center px-4 py-2"
                 >
-                  <X className="w-4 h-4 mr-1" />
-                  Clear
+                  <X className="w-4 h-4 mr-2" />
+                  Clear Filters
                 </Button>
-                <Button type="button" onClick={applyFilters}>
+                <Button 
+                  type="button" 
+                  onClick={applyFilters}
+                  className="px-6 py-2"
+                >
                   Apply Filters
-                </Button>
-              </div>
-            </motion.div>
-          )}
+                </Button>              </div>
+            </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>      {/* Results Section */}
-      <div className="container py-8">
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }, (_, index) => (
-              <div
-                key={`skeleton-${index}`}
-                className="h-64 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"
-              ></div>
-            ))}
-          </div>
-        ) : searchResults.length > 0 ? (
-        <BookGrid books={searchResults} />
-              ) : (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-medium mb-2">No books found</h2>
-            <p className="text-muted-foreground">
-              Try adjusting your search or filters to find what you're looking for.
-            </p>
-          </div>
-        )}
       </div>
-    </motion.div>
+
+      {/* Results Section */}
+      <div className="container mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {renderSearchResults()}
+        </motion.div>
+      </div>
+    </div>
   );
 }

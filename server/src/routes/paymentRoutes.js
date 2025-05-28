@@ -18,10 +18,12 @@ router.post(
 );
 
 router.post(
-  '/webhook',
-  express.raw({ type: 'application/json' }),
-  asyncHandler(paymentController.handleWebhook)
+  '/complete-stripe-payment',
+  authenticate,
+  asyncHandler(paymentController.completeStripePayment)
 );
+
+// Webhook route removed - not needed for testing
 
 router.get(
   '/history',

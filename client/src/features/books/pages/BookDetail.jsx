@@ -8,7 +8,8 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useCartStore } from '@/features/cart/store/cartStore';
 import { formatCurrency, reportReasons } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
-import LoadingScreen from '@/components/ui/LoadingScreen';
+import { ContentLoadingSkeleton } from '@/components/ui/LoadingComponents';
+import ServerErrorHandler from '@/components/ui/ServerErrorHandler';
 import toast from 'react-hot-toast';
 
 export default function BookDetail() {
@@ -18,23 +19,54 @@ export default function BookDetail() {
   const { addToCart, isInCart } = useCartStore();
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
-
-  const { data: book, isLoading } = useQuery({
+  const { data: book, isLoading, error, refetch } = useQuery({
     queryKey: ['book', id],
     queryFn: () => bookService.getBookById(id),
+    retry: (failureCount, error) => {
+      if (error?.code === 'NETWORK_ERROR' || error?.status >= 500) {
+        return failureCount < 2;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
   });
+  // Check if book was listed more than 12 hours ago
+  const isOldListing = book?.createdAt && new Date() - new Date(book.createdAt) > 12 * 60 * 60 * 1000;
 
-  const inCart = isInCart(id);
-  const isOwner = user?.email === book?.email;
+  if (error) {
+    return (
+      <div className="pt-20 min-h-screen">
+        <div className="container py-8">
+          <ServerErrorHandler 
+            error={error}
+            onRetry={refetch}
+            title="Failed to load book details"
+            description="We couldn't fetch the book information. This might be due to server maintenance."
+          />
+        </div>
+      </div>
+    );
+  }
 
-  if (isLoading) return <LoadingScreen />;
+  if (isLoading) {
+    return (
+      <div className="pt-20 min-h-screen">
+        <div className="container py-8">
+          <ContentLoadingSkeleton />
+        </div>
+      </div>
+    );
+  }
   if (!book) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="pt-20 min-h-screen flex items-center justify-center">
         <p className="text-xl">Book not found</p>
       </div>
     );
   }
+
+  const inCart = isInCart(id);
+  const isOwner = user?.email === book?.email;
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -43,7 +75,6 @@ export default function BookDetail() {
     }
     await addToCart(book);
   };
-
   const handleReport = async () => {
     if (!user) {
       toast.error('Please login to report');
@@ -71,12 +102,35 @@ export default function BookDetail() {
       } else {
         toast.error('Failed to submit report');
       }
-    }
-  };
+    }  };
 
   return (
     <div className="pt-20 min-h-screen">
-      <div className="container py-8">
+      <div className="container py-8">        {/* Warning for sold books listed more than 12 hours ago */}
+        {book.availability === 'sold' && book.soldAt && 
+         new Date() - new Date(book.soldAt) > 12 * 60 * 60 * 1000 && (
+          <div className="bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
+              <AlertCircle className="h-5 w-5" />
+              <p className="text-sm">
+                This book has been sold and was removed from public listings after 12 hours.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Warning for books listed more than 12 hours ago */}
+        {isOldListing && book.availability === 'available' && (
+          <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+              <AlertCircle className="h-5 w-5" />
+              <p className="text-sm">
+                This book was listed more than 12 hours ago. Please verify availability with the seller.
+              </p>
+            </div>
+          </div>
+        )}
+        
         <div className="grid lg:grid-cols-2 gap-12">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -95,8 +149,7 @@ export default function BookDetail() {
               {isOwner ? (
                 <Button className="flex-1" disabled>
                   Your Book
-                </Button>
-              ) : (
+                </Button>              ) : (
                 <>
                   <Button
                     className="flex-1"
@@ -104,7 +157,11 @@ export default function BookDetail() {
                     disabled={inCart || book.availability === 'sold'}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    {inCart ? 'In Cart' : book.availability === 'sold' ? 'Sold Out' : 'Add to Cart'}
+                    {(() => {
+                      if (inCart) return 'In Cart';
+                      if (book.availability === 'sold') return 'Sold Out';
+                      return 'Add to Cart';
+                    })()}
                   </Button>
                   <Button
                     variant="destructive"

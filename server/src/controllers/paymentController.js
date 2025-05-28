@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { ObjectId } from 'mongodb';
-import { getCollection } from '../config/database.js';
+import { getCollection, getClient } from '../config/database.js';
 
 // Initialize Stripe with error handling
 const getStripe = () => {
@@ -65,9 +65,8 @@ export const paymentController = {
           },
           quantity: 1,
         })),
-        mode: 'payment',
-        success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.CLIENT_URL}/cart`,
+        mode: 'payment',        success_url: `${process.env.CLIENT_URL_LOCAL || process.env.CLIENT_URL || 'http://localhost:5173'}/payment-success?session_id={CHECKOUT_SESSION_ID}&payment_method=stripe`,
+        cancel_url: `${process.env.CLIENT_URL_LOCAL || process.env.CLIENT_URL || 'http://localhost:5173'}/cart`,
         metadata: {
           userId: req.user.uid,
           userEmail: req.user.email,
@@ -168,22 +167,29 @@ export const paymentController = {
         authorName: item.authorName,
         price: parseFloat(item.Price)
       });
-    }
-
+    }    // Add shipping cost
     totalAmount += 50;
 
-    const session = await client.startSession();
+    const client = getClient();
+    const session = client.startSession();
     
     try {
       await session.withTransaction(async () => {
+        // Mark books as sold
         for (const item of cartItems) {
           await bookCollection.updateOne(
             { _id: new ObjectId(item.original_id) },
-            { $set: { availability: 'sold' } },
+            { 
+              $set: { 
+                availability: 'sold',
+                soldAt: new Date()
+              } 
+            },
             { session }
           );
         }
 
+        // Clear cart items
         await cartCollection.deleteMany(
           {
             user_email: req.user.email,
@@ -192,6 +198,7 @@ export const paymentController = {
           { session }
         );
 
+        // Create payment record
         const paymentInfo = {
           userId: req.user.uid,
           email: req.user.email,
@@ -201,7 +208,7 @@ export const paymentController = {
           paymentMethod: 'cash_on_delivery',
           status: 'pending',
           createdAt: new Date(),
-          orderId: `COD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          orderId: `COD-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
         };
 
         await paymentCollection.insertOne(paymentInfo, { session });
@@ -209,7 +216,8 @@ export const paymentController = {
 
       res.json({ 
         success: true, 
-        message: 'Order placed successfully' 
+        message: 'Order placed successfully',
+        orderId: `COD-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       });
     } catch (error) {
       console.error('COD processing error:', error);
@@ -220,26 +228,30 @@ export const paymentController = {
     } finally {
       await session.endSession();
     }
-  },
-  async handleWebhook(req, res) {
-    const sig = req.headers['stripe-signature'];
-    let event;
+  },  // Webhook removed - using success URL handling instead
+
+  async completeStripePayment(req, res) {
+    const { sessionId } = req.body;
+    
+    if (!sessionId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Session ID is required' 
+      });
+    }
 
     try {
       const stripe = getStripe();
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-    } catch (err) {
-      console.error('Webhook signature verification failed:', err);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
       
+      if (session.payment_status !== 'paid') {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Payment not completed' 
+        });
+      }
+
+      // Get cart items and book IDs from session metadata
       const cartItemIds = JSON.parse(session.metadata.cartItemIds);
       const bookIds = JSON.parse(session.metadata.bookIds);
       
@@ -247,31 +259,77 @@ export const paymentController = {
       const bookCollection = getCollection('books');
       const paymentCollection = getCollection('payments');
 
-      for (const bookId of bookIds) {
-        await bookCollection.updateOne(
-          { _id: new ObjectId(bookId) },
-          { $set: { availability: 'sold' } }
-        );
-      }
-
-      await cartCollection.deleteMany({
-        _id: { $in: cartItemIds.map(id => new ObjectId(id)) }
+      // Check if payment was already processed
+      const existingPayment = await paymentCollection.findOne({
+        stripeSessionId: sessionId
       });
 
-      const paymentInfo = {
-        userId: session.metadata.userId,
-        email: session.metadata.userEmail,
-        amount: session.amount_total / 100,
-        paymentMethod: 'stripe',
-        stripeSessionId: session.id,
-        status: 'completed',
-        createdAt: new Date()
-      };
+      if (existingPayment) {
+        return res.json({ 
+          success: true, 
+          message: 'Payment already processed',
+          alreadyProcessed: true
+        });
+      }
 
-      await paymentCollection.insertOne(paymentInfo);
+      const client = getClient();
+      const dbSession = client.startSession();
+      
+      try {
+        await dbSession.withTransaction(async () => {
+          // Mark books as sold
+          for (const bookId of bookIds) {
+            await bookCollection.updateOne(
+              { _id: new ObjectId(bookId) },
+              { 
+                $set: { 
+                  availability: 'sold',
+                  soldAt: new Date()
+                } 
+              },
+              { session: dbSession }
+            );
+          }
+
+          // Clear cart items
+          await cartCollection.deleteMany({
+            _id: { $in: cartItemIds.map(id => new ObjectId(id)) }
+          }, { session: dbSession });
+
+          // Create payment record
+          const paymentInfo = {
+            userId: session.metadata.userId,
+            email: session.metadata.userEmail,
+            amount: session.amount_total / 100,
+            paymentMethod: 'stripe',
+            stripeSessionId: session.id,
+            status: 'completed',
+            createdAt: new Date()
+          };
+
+          await paymentCollection.insertOne(paymentInfo, { session: dbSession });
+        });
+
+        res.json({ 
+          success: true, 
+          message: 'Payment completed successfully' 
+        });
+      } catch (error) {
+        console.error('Transaction error:', error);
+        res.status(500).json({ 
+          success: false, 
+          error: 'Failed to complete payment' 
+        });
+      } finally {
+        await dbSession.endSession();
+      }
+    } catch (error) {
+      console.error('Stripe payment completion error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to verify payment' 
+      });
     }
-
-    res.json({ received: true });
   },
 
   async getPaymentHistory(req, res) {

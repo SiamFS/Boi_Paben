@@ -1,11 +1,13 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import PrivateRoute from '@/features/auth/components/PrivateRoute';
 import Layout from '@/components/layout/Layout';
 import DashboardLayout from '@/features/dashboard/components/DashboardLayout';
+import { prefetchEssentialData } from '@/lib/prefetch';
 
 const Home = lazy(() => import('@/features/home/pages/Home'));
 const Shop = lazy(() => import('@/features/books/pages/Shop'));
@@ -24,6 +26,24 @@ const Search = lazy(() => import('@/features/books/pages/Search'));
 const PaymentSuccess = lazy(() => import('@/features/cart/pages/PaymentSuccess'));
 
 function App() {
+  const queryClient = useQueryClient();
+
+  // Prefetch essential data after initial render with error handling
+  useEffect(() => {
+    // Use a small delay to prioritize rendering the initial UI first
+    const timer = setTimeout(() => {
+      try {
+        // Safe prefetching with error handling
+        prefetchEssentialData(queryClient);
+      } catch (error) {
+        console.error("Error prefetching data:", error);
+        // Continue app execution even if prefetching fails
+      }
+    }, 1500); // Slightly longer delay for more reliable initial rendering
+    
+    return () => clearTimeout(timer);
+  }, [queryClient]);
+
   return (
     <ThemeProvider>
       <AuthProvider>
