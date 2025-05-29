@@ -46,13 +46,27 @@ export const BookGridSkeleton = ({ count = 8, listView = false }) => {
     return (
       <div className="space-y-4">
         {Array.from({ length: count }, (_, index) => (
-          <div key={index} className="card flex gap-4 p-5 animate-pulse">
-            <SkeletonLoader className="w-24 h-32 rounded-xl" />
-            <div className="flex-grow flex flex-col justify-between min-w-0">
+          <div key={index} className="card flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-5 animate-pulse">
+            {/* Mobile layout */}
+            <div className="flex gap-3 sm:contents">
+              <SkeletonLoader className="w-20 h-28 sm:w-24 sm:h-32 rounded-xl flex-shrink-0" />
+              <div className="flex-grow flex flex-col justify-between min-w-0">
+                <div className="flex-grow space-y-2">
+                  <SkeletonLoader className="h-5 sm:h-6 w-full" />
+                  <SkeletonLoader className="h-3 sm:h-4 w-3/4" />
+                  <SkeletonLoader className="h-5 w-20" />
+                </div>
+                {/* Mobile price */}
+                <div className="flex items-center justify-between mt-2 sm:hidden">
+                  <SkeletonLoader className="h-6 w-20" />
+                  <SkeletonLoader className="h-4 w-16" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Desktop layout (hidden on mobile) */}
+            <div className="hidden sm:flex sm:flex-col sm:justify-between sm:min-w-0 sm:flex-grow">
               <div className="flex-grow space-y-3">
-                <SkeletonLoader className="h-6 w-full" />
-                <SkeletonLoader className="h-4 w-3/4" />
-                <SkeletonLoader className="h-6 w-20" />
                 <SkeletonLoader className="h-4 w-full" />
                 <SkeletonLoader className="h-4 w-2/3" />
               </div>
@@ -64,14 +78,19 @@ export const BookGridSkeleton = ({ count = 8, listView = false }) => {
                 </div>
               </div>
             </div>
+            
+            {/* Mobile action buttons */}
+            <div className="flex gap-2 sm:hidden">
+              <SkeletonLoader className="h-8 flex-1" />
+              <SkeletonLoader className="h-8 flex-1" />
+            </div>
           </div>
         ))}
       </div>
     );
   }
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
       {Array.from({ length: count }, (_, index) => (
         <motion.div
           key={index}
@@ -81,17 +100,17 @@ export const BookGridSkeleton = ({ count = 8, listView = false }) => {
           className="card h-full flex flex-col overflow-hidden animate-pulse"
         >
           <SkeletonLoader className="aspect-[3/4] rounded-t-xl" />
-          <div className="p-4 flex-grow flex flex-col space-y-3">
-            <div className="flex-grow space-y-2">
-              <SkeletonLoader className="h-5 w-full" />
-              <SkeletonLoader className="h-5 w-4/5" />
-              <SkeletonLoader className="h-4 w-3/4" />
-              <SkeletonLoader className="h-4 w-16" />
+          <div className="p-3 sm:p-4 flex-grow flex flex-col space-y-2 sm:space-y-3">
+            <div className="flex-grow space-y-1 sm:space-y-2">
+              <SkeletonLoader className="h-4 sm:h-5 w-full" />
+              <SkeletonLoader className="h-4 sm:h-5 w-4/5" />
+              <SkeletonLoader className="h-3 sm:h-4 w-3/4" />
+              <SkeletonLoader className="h-3 sm:h-4 w-16" />
             </div>
-            <div className="mt-auto space-y-2 pt-3 border-t border-border/30">
+            <div className="mt-auto space-y-2 pt-2 sm:pt-3 border-t border-border/30">
               <div className="flex justify-between items-center">
-                <SkeletonLoader className="h-6 w-20" />
-                <SkeletonLoader className="h-8 w-8" />
+                <SkeletonLoader className="h-5 sm:h-6 w-16 sm:w-20" />
+                <SkeletonLoader className="h-6 sm:h-8 w-6 sm:w-8" />
               </div>
             </div>
           </div>

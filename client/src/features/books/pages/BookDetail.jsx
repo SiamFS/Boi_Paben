@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -19,6 +19,12 @@ export default function BookDetail() {
   const { addToCart, isInCart } = useCartStore();
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [id]);
+
   const { data: book, isLoading, error, refetch } = useQuery({
     queryKey: ['book', id],
     queryFn: () => bookService.getBookById(id),
@@ -130,136 +136,146 @@ export default function BookDetail() {
             </div>
           </div>
         )}
-        
-        <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-3 gap-8">
+          {/* Book Image */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
+            className="lg:col-span-1"
           >
-            <div className="aspect-[3/4] overflow-hidden rounded-lg bg-muted">
-              <img
-                src={book.imageURL}
-                alt={book.bookTitle}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <div className="sticky top-24">
+              <div className="aspect-[3/4] max-w-sm mx-auto overflow-hidden rounded-lg bg-muted shadow-lg">
+                <img
+                  src={book.imageURL}
+                  alt={book.bookTitle}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
 
-            <div className="flex gap-4">
-              {isOwner ? (
-                <Button className="flex-1" disabled>
-                  Your Book
-                </Button>              ) : (
-                <>
-                  <Button
-                    className="flex-1"
-                    onClick={handleAddToCart}
-                    disabled={inCart || book.availability === 'sold'}
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    {(() => {
-                      if (inCart) return 'In Cart';
-                      if (book.availability === 'sold') return 'Sold Out';
-                      return 'Add to Cart';
-                    })()}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => setShowReportModal(true)}
-                  >
-                    <AlertCircle className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
+              <div className="mt-6">
+                {isOwner ? (
+                  <Button className="w-full" disabled>
+                    Your Book
+                  </Button>                ) : (
+                  <div className="flex gap-3">
+                    <Button
+                      className="flex-1"
+                      onClick={handleAddToCart}
+                      disabled={inCart || book.availability === 'sold'}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      {(() => {
+                        if (inCart) return 'In Cart';
+                        if (book.availability === 'sold') return 'Sold Out';
+                        return 'Add to Cart';
+                      })()}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => setShowReportModal(true)}
+                      title="Report this listing"
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
 
+          {/* Book Details */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
-          >
-            <div>
+            className="lg:col-span-2 space-y-8"
+          >            {/* Header */}
+            <div className="border-b pb-6">
               {book.availability === 'sold' && (
                 <span className="inline-block px-3 py-1 bg-destructive text-destructive-foreground text-sm rounded-full mb-4">
                   Sold Out
                 </span>
               )}
-              <h1 className="text-3xl font-bold mb-2">{book.bookTitle}</h1>
-              <p className="text-xl text-muted-foreground">by {book.authorName}</p>
-            </div>
-
-            <div className="flex items-baseline gap-4">
-              <span className="text-3xl font-bold text-primary">
-                {formatCurrency(book.Price)}
-              </span>
-              <span className="text-muted-foreground">
-                Category: {book.category}
-              </span>
-            </div>
-
-            <div className="prose max-w-none">
-              <h3 className="font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground">{book.bookDescription}</p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              {book.authenticity && (
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Authenticity</p>
-                    <p className="font-medium">{book.authenticity}</p>
-                  </div>
-                </div>
-              )}
+              <h1 className="text-4xl font-bold mb-3 leading-tight">{book.bookTitle}</h1>
+              <p className="text-xl text-muted-foreground mb-4">by {book.authorName}</p>
               
-              {book.productCondition && (
-                <div className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Condition</p>
-                    <p className="font-medium">{book.productCondition}</p>
-                  </div>
-                </div>
-              )}
-
-              {book.publisher && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Publisher</p>
-                  <p className="font-medium">{book.publisher}</p>
-                </div>
-              )}
-
-              {book.edition && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Edition</p>
-                  <p className="font-medium">{book.edition}</p>
-                </div>
-              )}
+              <div className="flex flex-wrap items-center gap-6">
+                <span className="text-3xl font-bold text-primary">
+                  {formatCurrency(book.Price)}
+                </span>
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                  {book.category}
+                </span>
+              </div>
             </div>
 
-            <div className="border-t pt-6">
-              <h3 className="font-semibold mb-4">Seller Information</h3>
-              <div className="space-y-3">
+            {/* Description */}
+            <div className="prose max-w-none">
+              <h3 className="text-xl font-semibold mb-3">Description</h3>
+              <p className="text-muted-foreground leading-relaxed">{book.bookDescription}</p>
+            </div>
+
+            {/* Book Details */}
+            <div className="bg-muted/50 rounded-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Book Details</h3>
+              <div className="grid sm:grid-cols-2 gap-6">
+                {book.authenticity && (
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Authenticity</p>
+                      <p className="font-medium">{book.authenticity}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {book.productCondition && (
+                  <div className="flex items-center gap-3">
+                    <Package className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Condition</p>
+                      <p className="font-medium">{book.productCondition}</p>
+                    </div>
+                  </div>
+                )}
+
+                {book.publisher && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Publisher</p>
+                    <p className="font-medium">{book.publisher}</p>
+                  </div>
+                )}
+
+                {book.edition && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Edition</p>
+                    <p className="font-medium">{book.edition}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Seller Information */}
+            <div className="bg-card border rounded-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Seller Information</h3>
+              <div className="space-y-4">
                 <p className="text-muted-foreground">
                   Sold by: <span className="font-medium text-foreground">{book.seller}</span>
                 </p>
                 
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p>{book.streetAddress}</p>
-                    <p>{book.cityTown}, {book.district}</p>
-                    {book.zipCode && <p>Zip: {book.zipCode}</p>}
+                    <p className="font-medium">{book.streetAddress}</p>
+                    <p className="text-muted-foreground">{book.cityTown}, {book.district}</p>
+                    {book.zipCode && <p className="text-muted-foreground">Zip: {book.zipCode}</p>}
                   </div>
                 </div>
 
                 {book.contactNumber && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
-                    <p className="text-sm">{book.contactNumber}</p>
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <p className="text-sm font-medium">{book.contactNumber}</p>
                   </div>
                 )}
               </div>

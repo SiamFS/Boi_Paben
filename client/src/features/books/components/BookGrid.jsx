@@ -35,10 +35,9 @@ export default function BookGrid({ books, loading, view = 'carousel', error = nu
       </div>
     );
   }
-
   if (view === 'grid') {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         {books.map((book) => (
           <BookCard key={book._id} book={book} />
         ))}
@@ -55,19 +54,34 @@ export default function BookGrid({ books, loading, view = 'carousel', error = nu
       </div>
     );
   }
-
   return (
     <Swiper
-      slidesPerView={1}
-      spaceBetween={24}
+      slidesPerView={2}
+      spaceBetween={12}
       pagination={{ clickable: true }}
       navigation={true}
       modules={[Pagination, Navigation]}
       breakpoints={{
-        640: { slidesPerView: 2 },
-        768: { slidesPerView: 3 },
-        1024: { slidesPerView: 4 },
-        1280: { slidesPerView: 5 },
+        480: { 
+          slidesPerView: 2, 
+          spaceBetween: 16 
+        },
+        640: { 
+          slidesPerView: 2, 
+          spaceBetween: 20 
+        },
+        768: { 
+          slidesPerView: 3, 
+          spaceBetween: 24 
+        },
+        1024: { 
+          slidesPerView: 4, 
+          spaceBetween: 24 
+        },
+        1280: { 
+          slidesPerView: 5, 
+          spaceBetween: 24 
+        },
       }}
       className="book-carousel"
     >
