@@ -252,9 +252,9 @@ This project is licensed under the MIT License.
 
 Feel free to contact me for any questions or contributions to the project:
 
-- **Email**: [your-email@example.com](mailto:your-email@example.com)
-- **LinkedIn**: [Your LinkedIn Profile](https://linkedin.com/in/yourprofile)
-- **GitHub**: [Your GitHub Profile](https://github.com/yourusername)
+- **Email**: [siamferdous1@gmail.com](mailto:siamferdous1@gmail.com)
+- **LinkedIn**: [Siam Ferdous](https://www.linkedin.com/in/siam-ferdous)
+- **GitHub**: [SiamFS](https://github.com/SiamFS)
 
 Contributions are always welcome. Please read the contributing guidelines before making a pull request.
 
