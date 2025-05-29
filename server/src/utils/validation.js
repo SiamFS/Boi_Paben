@@ -59,7 +59,7 @@ export const validateAuthorName = (name) => {
   }
   
   // Basic name validation - allow letters, spaces, dots, apostrophes
-  const namePattern = /^[a-zA-Z\s.''-]+$/;
+  const namePattern = /^[a-zA-Z\s.'-]+$/;
   if (sanitized && !namePattern.test(sanitized)) {
     errors.push('Author name contains invalid characters');
   }
@@ -179,12 +179,11 @@ export const validateOptionalText = (text, fieldName, maxLength) => {
   return { isValid: errors.length === 0, errors, sanitized };
 };
 
-// Comprehensive book data validation
-export const validateBookData = (bookData) => {
+// Helper function to validate required book fields
+const validateRequiredBookFields = (bookData) => {
   const errors = {};
   const sanitizedData = {};
   
-  // Validate required fields
   const titleValidation = validateBookTitle(bookData.bookTitle);
   if (!titleValidation.isValid) errors.bookTitle = titleValidation.errors;
   sanitizedData.bookTitle = titleValidation.sanitized;
@@ -209,7 +208,14 @@ export const validateBookData = (bookData) => {
   if (!categoryValidation.isValid) errors.category = categoryValidation.errors;
   sanitizedData.category = categoryValidation.sanitized;
   
-  // Validate address fields
+  return { errors, sanitizedData };
+};
+
+// Helper function to validate address fields
+const validateAddressFields = (bookData) => {
+  const errors = {};
+  const sanitizedData = {};
+  
   const streetValidation = validateAddress(bookData.streetAddress, 'Street Address', true);
   if (!streetValidation.isValid) errors.streetAddress = streetValidation.errors;
   sanitizedData.streetAddress = streetValidation.sanitized;
@@ -222,7 +228,14 @@ export const validateBookData = (bookData) => {
   if (!districtValidation.isValid) errors.district = districtValidation.errors;
   sanitizedData.district = districtValidation.sanitized;
   
-  // Validate optional fields
+  return { errors, sanitizedData };
+};
+
+// Helper function to validate optional fields
+const validateOptionalFields = (bookData) => {
+  const errors = {};
+  const sanitizedData = {};
+  
   if (bookData.publisher) {
     const publisherValidation = validateOptionalText(bookData.publisher, 'Publisher', VALIDATION_LIMITS.PUBLISHER.max);
     if (!publisherValidation.isValid) errors.publisher = publisherValidation.errors;
@@ -241,7 +254,14 @@ export const validateBookData = (bookData) => {
     sanitizedData.zipCode = zipValidation.sanitized;
   }
   
-  // Validate required enum fields
+  return { errors, sanitizedData };
+};
+
+// Helper function to validate enum fields
+const validateEnumFields = (bookData) => {
+  const errors = {};
+  const sanitizedData = {};
+  
   const validAuthenticities = ['Original', 'Copy'];
   const validConditions = ['New', 'Like New', 'Very Good', 'Good', 'Fair', 'Poor'];
   
@@ -256,6 +276,34 @@ export const validateBookData = (bookData) => {
   } else {
     sanitizedData.productCondition = bookData.productCondition;
   }
+  
+  return { errors, sanitizedData };
+};
+
+// Comprehensive book data validation
+export const validateBookData = (bookData) => {
+  const errors = {};
+  const sanitizedData = {};
+  
+  // Validate required fields
+  const requiredFields = validateRequiredBookFields(bookData);
+  Object.assign(errors, requiredFields.errors);
+  Object.assign(sanitizedData, requiredFields.sanitizedData);
+  
+  // Validate address fields
+  const addressFields = validateAddressFields(bookData);
+  Object.assign(errors, addressFields.errors);
+  Object.assign(sanitizedData, addressFields.sanitizedData);
+  
+  // Validate optional fields
+  const optionalFields = validateOptionalFields(bookData);
+  Object.assign(errors, optionalFields.errors);
+  Object.assign(sanitizedData, optionalFields.sanitizedData);
+  
+  // Validate enum fields
+  const enumFields = validateEnumFields(bookData);
+  Object.assign(errors, enumFields.errors);
+  Object.assign(sanitizedData, enumFields.sanitizedData);
   
   // Add other required fields as-is after basic sanitization
   if (bookData.imageURL) {
