@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 // Maximum length constraints
 export const VALIDATION_LIMITS = {
-  BOOK_TITLE: { min: 2, max: 150 },
+  BOOK_TITLE: { min: 3, max: 150 },
   AUTHOR_NAME: { min: 2, max: 100 },
   DESCRIPTION: { min: 10, max: 2000 },
   PUBLISHER: { min: 2, max: 100 },

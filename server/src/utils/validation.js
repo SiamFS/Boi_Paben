@@ -6,14 +6,14 @@ export const VALIDATION_LIMITS = {
   BOOK_TITLE: { min: 3, max: 150 },
   AUTHOR_NAME: { min: 2, max: 100 },
   DESCRIPTION: { min: 10, max: 2000 },
-  CONTACT_NUMBER: { min: 10, max: 20 },
-  PUBLISHER: { max: 100 },
-  EDITION: { max: 50 },
-  ADDRESS: { max: 200 },
-  CITY: { max: 50 },
-  DISTRICT: { max: 50 },
-  ZIP_CODE: { max: 10 },
-  PRICE: { min: 1, max: 100000 },
+  CONTACT_NUMBER: { min: 10, max: 15 },
+  PUBLISHER: { min: 2, max: 100 },
+  EDITION: { min: 1, max: 50 },
+  ADDRESS: { min: 5, max: 200 },
+  CITY: { min: 2, max: 100 },
+  DISTRICT: { min: 2, max: 100 },
+  ZIP_CODE: { min: 4, max: 10 },
+  PRICE: { min: 1, max: 50000 },
   IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
 };
 
