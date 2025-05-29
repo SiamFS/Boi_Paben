@@ -89,82 +89,84 @@ export const validateImageFile = (file) => {
   return errors;
 };
 
-// Comprehensive book data validation
-export const validateBookData = (data) => {
-  const errors = {};
+// Helper function to validate text field with length constraints
+const validateTextField = (value, fieldName, limits, isRequired = true) => {
+  const sanitized = sanitizeText(value);
   
-  // Sanitize and validate book title
-  const bookTitle = sanitizeText(data.bookTitle);
-  if (!bookTitle) {
-    errors.bookTitle = 'Book title is required';
-  } else if (bookTitle.length < VALIDATION_LIMITS.BOOK_TITLE.min) {
-    errors.bookTitle = `Book title must be at least ${VALIDATION_LIMITS.BOOK_TITLE.min} characters`;
-  } else if (bookTitle.length > VALIDATION_LIMITS.BOOK_TITLE.max) {
-    errors.bookTitle = `Book title must not exceed ${VALIDATION_LIMITS.BOOK_TITLE.max} characters`;
+  if (!sanitized && isRequired) {
+    return { error: `${fieldName} is required`, sanitized };
   }
   
-  // Sanitize and validate author name
-  const authorName = sanitizeText(data.authorName);
-  if (!authorName) {
-    errors.authorName = 'Author name is required';
-  } else if (authorName.length < VALIDATION_LIMITS.AUTHOR_NAME.min) {
-    errors.authorName = `Author name must be at least ${VALIDATION_LIMITS.AUTHOR_NAME.min} characters`;
-  } else if (authorName.length > VALIDATION_LIMITS.AUTHOR_NAME.max) {
-    errors.authorName = `Author name must not exceed ${VALIDATION_LIMITS.AUTHOR_NAME.max} characters`;
+  if (!sanitized) {
+    return { sanitized };
   }
   
-  // Validate description
-  const description = sanitizeText(data.bookDescription);
-  if (!description) {
-    errors.bookDescription = 'Book description is required';
-  } else if (description.length < VALIDATION_LIMITS.DESCRIPTION.min) {
-    errors.bookDescription = `Description must be at least ${VALIDATION_LIMITS.DESCRIPTION.min} characters`;
-  } else if (description.length > VALIDATION_LIMITS.DESCRIPTION.max) {
-    errors.bookDescription = `Description must not exceed ${VALIDATION_LIMITS.DESCRIPTION.max} characters`;
+  if (sanitized.length < limits.min) {
+    return { 
+      error: `${fieldName} must be at least ${limits.min} characters`, 
+      sanitized 
+    };
   }
   
-  // Validate price
-  const price = sanitizeNumber(data.Price, VALIDATION_LIMITS.PRICE.min, VALIDATION_LIMITS.PRICE.max);
+  if (sanitized.length > limits.max) {
+    return { 
+      error: `${fieldName} must not exceed ${limits.max} characters`, 
+      sanitized 
+    };
+  }
+  
+  return { sanitized };
+};
+
+// Helper function to validate price
+const validatePrice = (value) => {
+  const price = sanitizeNumber(value, VALIDATION_LIMITS.PRICE.min, VALIDATION_LIMITS.PRICE.max);
+  
   if (price < VALIDATION_LIMITS.PRICE.min) {
-    errors.Price = `Price must be at least ${VALIDATION_LIMITS.PRICE.min} BDT`;
-  } else if (price > VALIDATION_LIMITS.PRICE.max) {
-    errors.Price = `Price must not exceed ${VALIDATION_LIMITS.PRICE.max} BDT`;
+    return { 
+      error: `Price must be at least ${VALIDATION_LIMITS.PRICE.min} BDT`, 
+      price 
+    };
   }
   
-  // Validate contact number
-  const contactNumber = sanitizeText(data.contactNumber);
+  if (price > VALIDATION_LIMITS.PRICE.max) {
+    return { 
+      error: `Price must not exceed ${VALIDATION_LIMITS.PRICE.max} BDT`, 
+      price 
+    };
+  }
+  
+  return { price };
+};
+
+// Helper function to validate contact number
+const validateContact = (value) => {
+  const contactNumber = sanitizeText(value);
+  
   if (!contactNumber) {
-    errors.contactNumber = 'Contact number is required';
-  } else if (!validatePhoneNumber(contactNumber)) {
-    errors.contactNumber = 'Please enter a valid phone number';
-  }
-    // Validate address fields
-  const streetAddress = sanitizeText(data.streetAddress);
-  if (!streetAddress || streetAddress.length < VALIDATION_LIMITS.ADDRESS.min) {
-    errors.streetAddress = `Street address must be at least ${VALIDATION_LIMITS.ADDRESS.min} characters`;
-  } else if (streetAddress.length > VALIDATION_LIMITS.ADDRESS.max) {
-    errors.streetAddress = `Street address must not exceed ${VALIDATION_LIMITS.ADDRESS.max} characters`;
-  }
-    const cityTown = sanitizeText(data.cityTown);
-  if (!cityTown || cityTown.length < VALIDATION_LIMITS.CITY.min) {
-    errors.cityTown = `City/Town must be at least ${VALIDATION_LIMITS.CITY.min} characters`;
-  } else if (cityTown.length > VALIDATION_LIMITS.CITY.max) {
-    errors.cityTown = `City/Town must not exceed ${VALIDATION_LIMITS.CITY.max} characters`;
+    return { error: 'Contact number is required', contactNumber };
   }
   
-  const district = sanitizeText(data.district);
-  if (!district || district.length < VALIDATION_LIMITS.DISTRICT.min) {
-    errors.district = `District must be at least ${VALIDATION_LIMITS.DISTRICT.min} characters`;
-  } else if (district.length > VALIDATION_LIMITS.DISTRICT.max) {
-    errors.district = `District must not exceed ${VALIDATION_LIMITS.DISTRICT.max} characters`;
+  if (!validatePhoneNumber(contactNumber)) {
+    return { error: 'Please enter a valid phone number', contactNumber };
   }
   
-  // Optional fields validation
+  return { contactNumber };
+};
+
+// Helper function to validate optional fields
+const validateOptionalFields = (data) => {
+  const errors = {};
+  const sanitizedData = {};
+  
   if (data.publisher) {
     const publisher = sanitizeText(data.publisher);
     if (publisher.length > VALIDATION_LIMITS.PUBLISHER.max) {
       errors.publisher = `Publisher name must not exceed ${VALIDATION_LIMITS.PUBLISHER.max} characters`;
     }
+    sanitizedData.publisher = publisher;
+  } else {
+    sanitizedData.publisher = '';
   }
   
   if (data.edition) {
@@ -172,6 +174,9 @@ export const validateBookData = (data) => {
     if (edition.length > VALIDATION_LIMITS.EDITION.max) {
       errors.edition = `Edition must not exceed ${VALIDATION_LIMITS.EDITION.max} characters`;
     }
+    sanitizedData.edition = edition;
+  } else {
+    sanitizedData.edition = '';
   }
   
   if (data.zipCode) {
@@ -179,23 +184,58 @@ export const validateBookData = (data) => {
     if (zipCode.length < VALIDATION_LIMITS.ZIP_CODE.min || zipCode.length > VALIDATION_LIMITS.ZIP_CODE.max) {
       errors.zipCode = `Zip code must be between ${VALIDATION_LIMITS.ZIP_CODE.min} and ${VALIDATION_LIMITS.ZIP_CODE.max} characters`;
     }
+    sanitizedData.zipCode = zipCode;
+  } else {
+    sanitizedData.zipCode = '';
   }
+  
+  return { errors, sanitizedData };
+};
+
+// Comprehensive book data validation
+export const validateBookData = (data) => {
+  const errors = {};
+  
+  // Validate required text fields
+  const bookTitleResult = validateTextField(data.bookTitle, 'Book title', VALIDATION_LIMITS.BOOK_TITLE);
+  const authorNameResult = validateTextField(data.authorName, 'Author name', VALIDATION_LIMITS.AUTHOR_NAME);
+  const descriptionResult = validateTextField(data.bookDescription, 'Book description', VALIDATION_LIMITS.DESCRIPTION);
+  const streetAddressResult = validateTextField(data.streetAddress, 'Street address', VALIDATION_LIMITS.ADDRESS);
+  const cityTownResult = validateTextField(data.cityTown, 'City/Town', VALIDATION_LIMITS.CITY);
+  const districtResult = validateTextField(data.district, 'District', VALIDATION_LIMITS.DISTRICT);
+  
+  // Validate price and contact
+  const priceResult = validatePrice(data.Price);
+  const contactResult = validateContact(data.contactNumber);
+  
+  // Validate optional fields
+  const optionalResult = validateOptionalFields(data);
+  
+  // Collect errors
+  if (bookTitleResult.error) errors.bookTitle = bookTitleResult.error;
+  if (authorNameResult.error) errors.authorName = authorNameResult.error;
+  if (descriptionResult.error) errors.bookDescription = descriptionResult.error;
+  if (streetAddressResult.error) errors.streetAddress = streetAddressResult.error;
+  if (cityTownResult.error) errors.cityTown = cityTownResult.error;
+  if (districtResult.error) errors.district = districtResult.error;
+  if (priceResult.error) errors.Price = priceResult.error;
+  if (contactResult.error) errors.contactNumber = contactResult.error;
+  
+  Object.assign(errors, optionalResult.errors);
   
   return {
     isValid: Object.keys(errors).length === 0,
     errors,
     sanitizedData: {
-      bookTitle,
-      authorName,
-      bookDescription: description,
-      Price: price,
-      contactNumber,
-      streetAddress,
-      cityTown,
-      district,
-      publisher: data.publisher ? sanitizeText(data.publisher) : '',
-      edition: data.edition ? sanitizeText(data.edition) : '',
-      zipCode: data.zipCode ? sanitizeText(data.zipCode) : '',
+      bookTitle: bookTitleResult.sanitized,
+      authorName: authorNameResult.sanitized,
+      bookDescription: descriptionResult.sanitized,
+      Price: priceResult.price,
+      contactNumber: contactResult.contactNumber,
+      streetAddress: streetAddressResult.sanitized,
+      cityTown: cityTownResult.sanitized,
+      district: districtResult.sanitized,
+      ...optionalResult.sanitizedData,
       category: data.category,
       authenticity: data.authenticity,
       productCondition: data.productCondition,
