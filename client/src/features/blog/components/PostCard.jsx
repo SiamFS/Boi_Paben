@@ -135,7 +135,8 @@ export default function PostCard({ post, onEdit, onDelete }) {
           <img
             src={post.imageUrl}
             alt={post.title}
-            className="w-full rounded-lg mb-4"
+            className="w-full max-w-[400px] max-h-[300px] object-contain rounded-lg mb-4 mx-auto"
+            style={{ display: 'block' }}
           />
         )}
 
