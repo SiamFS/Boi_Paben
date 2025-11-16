@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { bookService } from '@/features/books/services/bookService';
-import { filterPublicBooks } from '@/lib/utils';
 import BookGrid from '@/features/books/components/BookGrid';
 import ServerErrorHandler from '@/components/ui/ServerErrorHandler';
 
-export default function LatestBooks() {  const { data: books = [], isLoading, error, refetch } = useQuery({
+export default function LatestBooks() {
+  const { data: books = [], isLoading, error, refetch } = useQuery({
     queryKey: ['latestBooks'],
-    queryFn: () => bookService.getAllBooks({ limit: 10 }),
+    queryFn: () => bookService.getLatestBooks(10),
     retry: (failureCount, error) => {
       if (error?.code === 'NETWORK_ERROR' || error?.status >= 500) {
         return failureCount < 2;
@@ -20,7 +20,7 @@ export default function LatestBooks() {  const { data: books = [], isLoading, er
   });
 
   // Filter out old sold books for public listings
-  const filteredBooks = filterPublicBooks(books);
+  const filteredBooks = books; // Already filtered by backend
 
   return (
     <section className="py-16 bg-muted/50">
@@ -36,6 +36,14 @@ export default function LatestBooks() {  const { data: books = [], isLoading, er
         </motion.div>
 
         <BookGrid books={filteredBooks} loading={isLoading} />
+
+        {!isLoading && filteredBooks.length === 0 && !error && (
+          <div className="py-16 text-center">
+            <p className="text-muted-foreground text-lg">
+              No books available yet. Check back soon!
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="mt-8">

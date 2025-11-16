@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import cache from '@/lib/cache';
 
 export const blogService = {
   async getAllPosts() {
@@ -6,6 +7,11 @@ export const blogService = {
       const response = await apiClient.get('/api/blog/posts');
       return response.data;
     } catch (error) {
+      // Try to get from cache as fallback
+      const cachedPosts = cache.get('/api/blog/posts');
+      if (cachedPosts) {
+        return cachedPosts;
+      }
       console.error('Error fetching posts:', error);
       throw new Error('Failed to fetch blog posts');
     }
@@ -24,6 +30,8 @@ export const blogService = {
   async createPost(postData) {
     try {
       const response = await apiClient.post('/api/blog/posts', postData);
+      // Clear cache when creating new post
+      cache.delete('/api/blog/posts');
       return response.data;
     } catch (error) {
       console.error('Error creating post:', error);
@@ -34,6 +42,8 @@ export const blogService = {
   async updatePost(id, postData) {
     try {
       const response = await apiClient.put(`/api/blog/posts/${id}`, postData);
+      // Clear cache when updating post
+      cache.delete('/api/blog/posts');
       return response.data;
     } catch (error) {
       console.error('Error updating post:', error);
@@ -44,6 +54,8 @@ export const blogService = {
   async deletePost(id) {
     try {
       const response = await apiClient.delete(`/api/blog/posts/${id}`);
+      // Clear cache when deleting post
+      cache.delete('/api/blog/posts');
       return response.data;
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -59,6 +71,8 @@ export const blogService = {
           content,
         }
       );
+      // Clear cache when adding comment
+      cache.delete('/api/blog/posts');
       return response.data;
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -72,6 +86,8 @@ export const blogService = {
         `/api/blog/posts/${postId}/comments/${commentId}`,
         { content }
       );
+      // Clear cache when updating comment
+      cache.delete('/api/blog/posts');
       return response.data;
     } catch (error) {
       console.error('Error updating comment:', error);
@@ -84,6 +100,8 @@ export const blogService = {
       const response = await apiClient.delete(
         `/api/blog/posts/${postId}/comments/${commentId}`
       );
+      // Clear cache when deleting comment
+      cache.delete('/api/blog/posts');
       return response.data;
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -96,6 +114,8 @@ export const blogService = {
       const response = await apiClient.post(`/api/blog/posts/${postId}/react`, {
         reactionType,
       });
+      // Clear cache when reacting to post
+      cache.delete('/api/blog/posts');
       return response.data;
     } catch (error) {
       console.error('Error reacting to post:', error);
@@ -108,6 +128,11 @@ export const blogService = {
       const response = await apiClient.get(`/api/blog/reactions/${userId}`);
       return response.data;
     } catch (error) {
+      // Try to get from cache as fallback
+      const cachedReactions = cache.get(`/api/blog/reactions/${userId}`);
+      if (cachedReactions) {
+        return cachedReactions;
+      }
       console.error('Error fetching user reactions:', error);
       throw new Error('Failed to fetch user reactions');
     }

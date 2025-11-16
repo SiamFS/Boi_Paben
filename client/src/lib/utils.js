@@ -15,11 +15,26 @@ export function formatCurrency(amount, currency = 'BDT') {
 }
 
 export function formatDate(date) {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(date));
+  // Handle null, undefined, or invalid dates
+  if (!date) return 'Unknown date';
+  
+  try {
+    const dateObj = new Date(date);
+    
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) {
+      return 'Invalid date';
+    }
+    
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(dateObj);
+  } catch (error) {
+    console.error('Error formatting date:', error, 'with value:', date);
+    return 'Invalid date';
+  }
 }
 
 export function truncateText(text, maxLength = 100) {

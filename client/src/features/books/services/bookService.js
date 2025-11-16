@@ -1,40 +1,94 @@
 import apiClient from '@/lib/api-client';
+import cache from '@/lib/cache';
 
 export const bookService = {
+  async getLatestBooks(limit = 10) {
+    try {
+      const response = await apiClient.get('/api/books/latest', {
+        params: { limit },
+        priority: 'low' // Low priority for latest books
+      });
+      // Handle both array and object response formats
+      return response.data.books || response.data;
+    } catch (error) {
+      // Try to get from cache as fallback
+      const cachedBooks = cache.get(`/api/books/latest`);
+      if (cachedBooks) {
+        return cachedBooks.books || cachedBooks;
+      }
+      throw error;
+    }
+  },
+
   async getAllBooks(params = {}) {
-    const response = await apiClient.get('/api/books/all', { 
-      params,
-      priority: params.priority || 'low' // Default to low priority for bulk data
-    });
-    return response.data;
+    try {
+      const response = await apiClient.get('/api/books/all', { 
+        params,
+        priority: params.priority || 'low' // Default to low priority for bulk data
+      });
+      return response.data;
+    } catch (error) {
+      // Try to get from cache as fallback
+      const cachedBooks = cache.get('/api/books/all');
+      if (cachedBooks) {
+        return cachedBooks;
+      }
+      throw error;
+    }
   },
 
   async getBookById(id) {
-    const response = await apiClient.get(`/api/books/${id}`, {
-      priority: 'high' // High priority for individual book details
-    });
-    return response.data;
+    try {
+      const response = await apiClient.get(`/api/books/${id}`, {
+        priority: 'high' // High priority for individual book details
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
   async searchBooks(query) {
-    const response = await apiClient.get(`/api/books/search/${query}`, {
-      priority: 'high' // High priority for search results
-    });
-    return response.data;
+    try {
+      const response = await apiClient.get(`/api/books/search/${query}`, {
+        priority: 'high' // High priority for search results
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
   async getBooksByCategory(category) {
-    const response = await apiClient.get(`/api/books/category/${category}`, {
-      priority: 'low' // Low priority for category browsing
-    });
-    return response.data;
+    try {
+      const response = await apiClient.get(`/api/books/category/${category}`, {
+        priority: 'low' // Low priority for category browsing
+      });
+      return response.data;
+    } catch (error) {
+      // Try to get from cache as fallback
+      const cachedBooks = cache.get(`/api/books/category/${category}`);
+      if (cachedBooks) {
+        return cachedBooks;
+      }
+      throw error;
+    }
   },
 
   async getUserBooks(email) {
-    const response = await apiClient.get(`/api/books/user/${email}`, {
-      priority: 'normal' // Normal priority for user's books
-    });
-    return response.data;
+    try {
+      const response = await apiClient.get(`/api/books/user/${email}`, {
+        priority: 'normal' // Normal priority for user's books
+      });
+      return response.data;
+    } catch (error) {
+      // Try to get from cache as fallback
+      const cachedBooks = cache.get(`/api/books/user/${email}`);
+      if (cachedBooks) {
+        return cachedBooks;
+      }
+      throw error;
+    }
   },
   async uploadBook(bookData) {
     try {

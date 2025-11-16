@@ -23,21 +23,24 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <App />
       <Toaster 
-        position="top-right"
+        position="top-center"
         toastOptions={{
           duration: 4000,
           style: {
             background: '#363636',
             color: '#fff',
+            marginTop: '80px', // Account for navbar height
           },
           success: {
             style: {
               background: '#10b981',
+              marginTop: '80px',
             },
           },
           error: {
             style: {
               background: '#ef4444',
+              marginTop: '80px',
             },
           },
         }}

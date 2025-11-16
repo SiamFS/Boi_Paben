@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Filter, SortAsc } from 'lucide-react';
 import { bookService } from '../services/bookService';
-import { bookCategories, filterPublicBooks } from '@/lib/utils';
+import { bookCategories } from '@/lib/utils';
 import BookGrid from '../components/BookGrid';
 import { Button } from '@/components/ui/Button';
 import ServerErrorHandler from '@/components/ui/ServerErrorHandler';
@@ -29,14 +29,15 @@ export default function Shop() {
       return false;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes - consistent with other pages
   });
   const handleRetry = async () => {
     setRetryCount(prev => prev + 1);
     await refetch();
   };
 
-  // Filter out old sold books for public listings
-  const filteredBooks = filterPublicBooks(books);
+  // Backend already filters sold books, no need for frontend filtering
+  const filteredBooks = books;
 
   const renderContent = () => {
     if (error) {

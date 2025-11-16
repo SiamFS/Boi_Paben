@@ -71,16 +71,19 @@ export function AuthProvider({ children }) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
+      // Use a default avatar URL (initials-based avatar service)
+      const defaultAvatarUrl = `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`;
+      
       await updateProfile(userCredential.user, {
         displayName: `${firstName} ${lastName}`,
-        photoURL: 'https://i.ibb.co/yWjpDXh/image.png',
+        photoURL: defaultAvatarUrl,
       });
 
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         firstName,
         lastName,
         email,
-        photoURL: 'https://i.ibb.co/yWjpDXh/image.png',
+        photoURL: defaultAvatarUrl,
         createdAt: serverTimestamp(),
         role: 'user',
       });

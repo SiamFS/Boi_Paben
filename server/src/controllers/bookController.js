@@ -790,5 +790,81 @@ export const bookController = {
         error: 'Failed to get categories'
       });
     }
+  },
+
+  async uploadImage(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file provided' });
+      }
+
+      const cloudinaryUrl = process.env.CLOUDINARY_URL;
+      
+      if (!cloudinaryUrl) {
+        return res.status(500).json({ error: 'Cloudinary configuration missing' });
+      }
+
+      // Parse CLOUDINARY_URL: cloudinary://api_key:api_secret@cloud_name
+      const url = new URL(cloudinaryUrl);
+      const apiKey = url.username;
+      const apiSecret = url.password;
+      const cloudName = url.hostname;
+
+      // Generate signature for signed upload
+      const crypto = (await import('crypto')).default;
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      const paramsToSign = {
+        folder: 'boipaben',
+        timestamp: timestamp,
+      };
+      
+      const paramsString = Object.keys(paramsToSign)
+        .sort()
+        .map(key => `${key}=${paramsToSign[key]}`)
+        .join('&');
+      
+      const signature = crypto
+        .createHash('sha256')
+        .update(paramsString + apiSecret)
+        .digest('hex');
+
+      // Upload to Cloudinary with proper multipart form data
+      const FormData = (await import('form-data')).default;
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', req.file.buffer, {
+        filename: req.file.originalname,
+        contentType: req.file.mimetype,
+      });
+      uploadFormData.append('api_key', apiKey);
+      uploadFormData.append('timestamp', timestamp.toString());
+      uploadFormData.append('folder', 'boipaben');
+      uploadFormData.append('signature', signature);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: 'POST',
+          body: uploadFormData,
+          headers: uploadFormData.getHeaders(),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.error) {
+        console.error('Cloudinary error:', data.error);
+        return res.status(400).json({ error: data.error.message || 'Cloudinary upload failed' });
+      }
+
+      res.json({
+        success: true,
+        imageUrl: data.secure_url,
+        publicId: data.public_id,
+      });
+    } catch (error) {
+      console.error('Image upload error:', error);
+      res.status(500).json({ error: 'Failed to upload image' });
+    }
   }
 };

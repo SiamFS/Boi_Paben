@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { bookService } from '@/features/books/services/bookService';
-import { bookCategories, filterPublicBooks } from '@/lib/utils';
+import { bookCategories } from '@/lib/utils';
 import BookGrid from '@/features/books/components/BookGrid';
 import { Button } from '@/components/ui/Button';
 import ServerErrorHandler from '@/components/ui/ServerErrorHandler';
@@ -29,8 +29,8 @@ export default function CategoryBooks() {
     await refetch();
   };
 
-  // Filter out old sold books for public listings
-  const filteredBooks = filterPublicBooks(books);
+  // Backend already filters sold books, no need for frontend filtering
+  const filteredBooks = books;
 
   return (
     <section className="py-16">
@@ -71,18 +71,29 @@ export default function CategoryBooks() {
               onRetry={handleRetry}
               retryCount={retryCount}
             />
-          </div>        ) : (
+          </div>
+        ) : (
           <>
-            <BookGrid books={filteredBooks.slice(0, 10)} loading={isLoading} />
-            
-            {!isLoading && filteredBooks.length > 0 && (
-              <div className="text-center mt-12">
-                <Link to="/shop">
-                  <Button size="lg" variant="outline">
+            {!isLoading && filteredBooks.length === 0 ? (
+              <div className="py-16 text-center">
+                <p className="text-muted-foreground text-lg">
+                  No books found in {selectedCategory} category
+                </p>
+              </div>
+            ) : (
+              <>
+                <BookGrid books={filteredBooks.slice(0, 10)} loading={isLoading} />
+                
+                {!isLoading && filteredBooks.length > 0 && (
+                  <div className="text-center mt-12">
+                    <Link to="/shop">
+                      <Button size="lg" variant="outline">
                     View All Books
                   </Button>
                 </Link>
               </div>
+            )}
+              </>
             )}
           </>
         )}

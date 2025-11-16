@@ -23,7 +23,9 @@ export const createServer = async () => {
   startScheduler();
   
   const corsOptions = {
-    origin: process.env.CLIENT_URL || process.env.CLIENT_URL_LOCAL || 'http://localhost:5173',
+    origin: process.env.NODE_ENV === 'development' 
+      ? (process.env.CLIENT_URL_LOCAL || 'http://localhost:5173')
+      : (process.env.CLIENT_URL || 'https://boi-paben.onrender.com'),
     credentials: true,
     optionsSuccessStatus: 200
   };

@@ -28,7 +28,7 @@ export default function Blog() {
   const createPostMutation = useMutation({
     mutationFn: blogService.createPost,
     onSuccess: () => {
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       setShowPostForm(false);
       toast.success('Post created successfully');
     },
@@ -41,7 +41,7 @@ export default function Blog() {
   const updatePostMutation = useMutation({
     mutationFn: ({ id, data }) => blogService.updatePost(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       setEditingPost(null);
       toast.success('Post updated successfully');
     },
@@ -54,7 +54,7 @@ export default function Blog() {
   const deletePostMutation = useMutation({
     mutationFn: blogService.deletePost,
     onSuccess: () => {
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       toast.success('Post deleted successfully');
     },
     onError: (error) => {
@@ -147,11 +147,21 @@ export default function Blog() {
         {isLoading ? (
           <div className="grid gap-6">
             {Array.from({ length: 3 }, (_, index) => (
-              <div key={`skeleton-post-${index}`} className="card p-6">
-                <div className="skeleton h-6 w-3/4 mb-4" />
-                <div className="skeleton h-4 w-full mb-2" />
-                <div className="skeleton h-4 w-5/6" />
-              </div>
+              <motion.div
+                key={`skeleton-post-${index}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="card p-6 animate-pulse"
+              >
+                <div className="h-6 w-3/4 mb-4 bg-muted rounded" />
+                <div className="h-4 w-full mb-2 bg-muted rounded" />
+                <div className="h-4 w-5/6 bg-muted rounded" />
+                <div className="mt-4 flex gap-2">
+                  <div className="h-8 w-16 bg-muted rounded" />
+                  <div className="h-8 w-16 bg-muted rounded" />
+                </div>
+              </motion.div>
             ))}
           </div>
         ) : posts.length === 0 ? (

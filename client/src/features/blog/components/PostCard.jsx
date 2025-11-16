@@ -22,14 +22,14 @@ export default function PostCard({ post, onEdit, onDelete }) {
   const reactMutation = useMutation({
     mutationFn: ({ postId, reactionType }) => blogService.reactToPost(postId, reactionType),
     onSuccess: () => {
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
   });
 
   const addCommentMutation = useMutation({
     mutationFn: ({ postId, content }) => blogService.addComment(postId, content),
     onSuccess: () => {
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       setCommentText('');
       toast.success('Comment added');
     },
@@ -39,7 +39,7 @@ export default function PostCard({ post, onEdit, onDelete }) {
     mutationFn: ({ postId, commentId, content }) => 
       blogService.updateComment(postId, commentId, content),
     onSuccess: () => {
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       setEditingComment(null);
       toast.success('Comment updated');
     },
@@ -48,7 +48,7 @@ export default function PostCard({ post, onEdit, onDelete }) {
   const deleteCommentMutation = useMutation({
     mutationFn: ({ postId, commentId }) => blogService.deleteComment(postId, commentId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       toast.success('Comment deleted');
     },
   });

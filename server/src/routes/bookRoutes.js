@@ -1,10 +1,29 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import multer from 'multer';
 import { bookController } from '../controllers/bookController.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { authenticate, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif/;
+    const mimeType = allowedTypes.test(file.mimetype);
+    const extname = allowedTypes.test(file.originalname.split('.').pop());
+    
+    if (mimeType && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 const bookValidationRules = [
   body('bookTitle').trim().notEmpty().withMessage('Book title is required'),
@@ -27,6 +46,9 @@ router.get('/recommendations', optionalAuth, asyncHandler(bookController.getReco
 router.get('/latest', asyncHandler(bookController.getLatestBooks));
 router.get('/:id/similar', asyncHandler(bookController.getSimilarBooks));
 router.post('/personalized', authenticate, asyncHandler(bookController.getPersonalizedRecommendations));
+
+// Image upload route
+router.post('/upload-image', authenticate, upload.single('file'), asyncHandler(bookController.uploadImage));
 
 router.get('/all', asyncHandler(bookController.getAllBooks));
 router.get('/categories', asyncHandler(bookController.getCategories));

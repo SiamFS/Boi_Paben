@@ -236,65 +236,78 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
         </nav>
 
         {isMenuOpen && (
-          <div className="md:hidden py-4 bg-card animate-slide-down">
-            <div className="flex flex-col gap-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="px-4 py-2 text-foreground/80 hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}              <form onSubmit={handleSearch} className="px-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search books..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setShowMobileSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowMobileSuggestions(false), 200)}
-                    className="input pr-10 w-full"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+          <>
+            {/* Backdrop overlay */}
+            <div 
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+              onClick={() => setIsMenuOpen(false)}
+            />
+            
+            {/* Side menu - slides from right */}
+            <div className="fixed top-16 right-0 bottom-0 w-64 bg-card shadow-lg z-41 md:hidden animate-slide-in-right overflow-y-auto">
+              <div className="flex flex-col gap-4 p-4">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="px-4 py-2 text-foreground/80 hover:text-primary transition-colors rounded-lg hover:bg-muted/50"
+                    onClick={() => setIsMenuOpen(false)}
                   >
-                    <Search className="h-4 w-4" />
-                  </button>
-                  {searchQuery && showMobileSuggestions && (
-                    <SearchSuggestions
-                      query={searchQuery}
-                      onSelect={(suggestion) => {
-                        navigate(`/search/${suggestion}`);
-                        setSearchQuery('');
-                        setIsMenuOpen(false);
-                        setShowMobileSuggestions(false);
-                      }}
-                      className="absolute top-full left-0 right-0 z-50 mt-1"
-                    />
-                  )}
-                </div>
-              </form>
-
-              <div className="px-4 flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Theme</span>
-                <Button variant="ghost" size="sm" onClick={toggleTheme}>
-                  {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                </Button>
-              </div>
-
-              {!user && (
-                <div className="px-4">
-                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                    <Button className="w-full">Login</Button>
+                    {item.label}
                   </Link>
+                ))}
+                
+                <div className="border-t pt-4">
+                  <form onSubmit={handleSearch} className="">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search books..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => setShowMobileSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowMobileSuggestions(false), 200)}
+                        className="input pr-10 w-full"
+                      />
+                      <button
+                        type="submit"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                      >
+                        <Search className="h-4 w-4" />
+                      </button>
+                      {searchQuery && showMobileSuggestions && (
+                        <SearchSuggestions
+                          query={searchQuery}
+                          onSelect={(suggestion) => {
+                            navigate(`/search/${suggestion}`);
+                            setSearchQuery('');
+                            setIsMenuOpen(false);
+                            setShowMobileSuggestions(false);
+                          }}
+                          className="absolute top-full left-0 right-0 z-50 mt-1"
+                        />
+                      )}
+                    </div>
+                  </form>
                 </div>
-              )}
+
+                <div className="border-t pt-4 flex items-center justify-between px-2">
+                  <span className="text-sm text-muted-foreground">Theme</span>
+                  <Button variant="ghost" size="sm" onClick={toggleTheme}>
+                    {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                {!user && (
+                  <div className="border-t pt-4">
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full">Login</Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </header>
