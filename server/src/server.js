@@ -23,9 +23,23 @@ export const createServer = async () => {
   startScheduler();
   
   const corsOptions = {
-    origin: process.env.NODE_ENV === 'development' 
-      ? (process.env.CLIENT_URL_LOCAL || 'http://localhost:5173')
-      : (process.env.CLIENT_URL || 'https://boi-paben.onrender.com'),
+    origin: (origin, callback) => {
+      // List of allowed origins
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://127.0.0.1:5173',
+        process.env.CLIENT_URL_LOCAL,
+        process.env.CLIENT_URL,
+      ].filter(Boolean); // Remove undefined values
+
+      // If no origin (like for mobile apps or curl requests), allow it
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     optionsSuccessStatus: 200
   };
