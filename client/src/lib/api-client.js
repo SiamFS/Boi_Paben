@@ -14,6 +14,41 @@ const API_URL = isLocalhost || isDevelopment
 console.log(`Running in ${isDevelopment ? 'development' : 'production'} mode`);
 console.log(`Using API URL: ${API_URL}`);
 
+// Track shown notifications to prevent duplicates
+let shownNotifications = new Set();
+let lastBackendErrorTime = 0;
+const ERROR_COOLDOWN_MS = 2000; // Don't show same error type twice within 2 seconds
+
+const showNotificationOnce = (message, type = 'loading', duration = 5000) => {
+  // Create a unique key for this message
+  const notificationKey = `${type}:${message}`;
+  
+  // For backend errors, add cooldown to prevent multiple simultaneous errors from spamming
+  if (type === 'loading' && message.includes('Backend')) {
+    const now = Date.now();
+    if (now - lastBackendErrorTime < ERROR_COOLDOWN_MS && shownNotifications.has(notificationKey)) {
+      return false; // Don't show if shown recently
+    }
+    lastBackendErrorTime = now;
+  }
+  
+  // Only show if we haven't shown this message in this session
+  if (!shownNotifications.has(notificationKey)) {
+    shownNotifications.add(notificationKey);
+    
+    if (type === 'loading') {
+      toast.loading(message, { duration });
+    } else if (type === 'error') {
+      toast.error(message, { duration });
+    } else if (type === 'success') {
+      toast.success(message, { duration });
+    }
+    
+    return true;
+  }
+  return false;
+};
+
 // Track if we've shown the Render startup warning
 let hasShownRenderWarning = false;
 const isProduction = !isLocalhost && !isDevelopment;
