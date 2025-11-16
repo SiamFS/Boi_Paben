@@ -45,7 +45,7 @@ export default function LatestBooks() {
           </div>
         )}
 
-        {error && (
+        {error && error?.code !== 'NETWORK_ERROR' && (
           <div className="mt-8">
             <ServerErrorHandler 
               error={error}

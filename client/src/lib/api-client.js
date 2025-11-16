@@ -14,43 +14,8 @@ const API_URL = isLocalhost || isDevelopment
 console.log(`Running in ${isDevelopment ? 'development' : 'production'} mode`);
 console.log(`Using API URL: ${API_URL}`);
 
-// Track shown notifications to prevent duplicates
-let shownNotifications = new Set();
-let lastBackendErrorTime = 0;
-const ERROR_COOLDOWN_MS = 2000; // Don't show same error type twice within 2 seconds
-
-const showNotificationOnce = (message, type = 'loading', duration = 5000) => {
-  // Create a unique key for this message
-  const notificationKey = `${type}:${message}`;
-  
-  // For backend errors, add cooldown to prevent multiple simultaneous errors from spamming
-  if (type === 'loading' && message.includes('Backend')) {
-    const now = Date.now();
-    if (now - lastBackendErrorTime < ERROR_COOLDOWN_MS && shownNotifications.has(notificationKey)) {
-      return false; // Don't show if shown recently
-    }
-    lastBackendErrorTime = now;
-  }
-  
-  // Only show if we haven't shown this message in this session
-  if (!shownNotifications.has(notificationKey)) {
-    shownNotifications.add(notificationKey);
-    
-    if (type === 'loading') {
-      toast.loading(message, { duration });
-    } else if (type === 'error') {
-      toast.error(message, { duration });
-    } else if (type === 'success') {
-      toast.success(message, { duration });
-    }
-    
-    return true;
-  }
-  return false;
-};
-
-// Track if we've shown the Render startup warning
-let hasShownRenderWarning = false;
+// Track if we've shown backend error message in this session (show only once)
+let hasShownBackendError = false;
 const isProduction = !isLocalhost && !isDevelopment;
 
 // Cache configuration: which endpoints to cache and for how long (in seconds)
@@ -161,58 +126,56 @@ apiClient.interceptors.response.use(
     const cacheKey = error.config?.url;
     const cachedData = cacheKey ? cache.get(cacheKey) : null;
 
-    // Check if it's a connection error (server not responding - Render cold start)
+    // Check if it's a connection error (server not responding)
     if (!error.response && (error.code === 'ECONNABORTED' || error.message === 'Network Error' || error.code === 'ECONNREFUSED')) {
-      // Show appropriate message based on environment and cache availability
-      if (cachedData) {
-        // We have cache - show restart message
-        if (isProduction && !hasShownRenderWarning) {
-          hasShownRenderWarning = true;
-          toast.loading(
-            '⏳ Backend is restarting...\nThis usually takes less than 2 minutes.\nShowing cached content in the meantime.',
-            {
-              duration: 6000,
-            }
-          );
-        } else if (!isProduction && !hasShownRenderWarning) {
-          hasShownRenderWarning = true;
-          toast.loading(
-            '⏳ Backend is not responding...\nShowing cached content in the meantime.',
-            {
-              duration: 5000,
-            }
+      const cacheKey = error.config?.url;
+      const cachedData = cacheKey ? cache.get(cacheKey) : null;
+
+      // Show ONE message per session only
+      if (!hasShownBackendError) {
+        hasShownBackendError = true;
+        
+        if (cachedData) {
+          // We have cache - show restart message
+          if (isProduction) {
+            toast.loading(
+              '⏳ Backend is restarting...\nShowing cached content in the meantime.',
+              { duration: 5000 }
+            );
+          } else {
+            toast.loading(
+              '⏳ Backend is not responding...\nShowing cached content.',
+              { duration: 4000 }
+            );
+          }
+        } else {
+          // No cache - show error message
+          toast.error(
+            '❌ Failed to connect to server.\nPlease check your connection.',
+            { duration: 4000 }
           );
         }
-        // Return cached data
+      }
+
+      // Return cached data if available
+      if (cachedData) {
         return Promise.resolve({
           data: cachedData,
           status: 200,
           fromCache: true,
           config: error.config,
         });
-      } else {
-        // No cache available - show error
-        hasShownRenderWarning = true; // Prevent duplicate messages
-        toast.error(
-          '❌ Failed to connect to server.\nPlease check your connection or try again later.',
-          {
-            duration: 5000,
-          }
-        );
       }
     } else if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
       toast.error('Session expired. Please login again.');
     } else if (error.response?.status === 500) {
-      // Try cache for 500 errors
+      const cacheKey = error.config?.url;
+      const cachedData = cacheKey ? cache.get(cacheKey) : null;
+      
       if (cachedData) {
-        toast.loading(
-          'Server error detected. Showing cached content.',
-          {
-            duration: 4000,
-          }
-        );
+        toast.loading('Server error. Showing cached content.', { duration: 3000 });
         return Promise.resolve({
           data: cachedData,
           status: 200,
@@ -222,14 +185,11 @@ apiClient.interceptors.response.use(
       }
       toast.error('Server error. Please try again later.');
     } else if (!error.response) {
-      // Generic network error - try cache
+      const cacheKey = error.config?.url;
+      const cachedData = cacheKey ? cache.get(cacheKey) : null;
+      
       if (cachedData) {
-        toast.loading(
-          'Network error. Showing cached content.',
-          {
-            duration: 4000,
-          }
-        );
+        toast.loading('Connection issue. Showing cached content.', { duration: 3000 });
         return Promise.resolve({
           data: cachedData,
           status: 200,
@@ -237,12 +197,6 @@ apiClient.interceptors.response.use(
           config: error.config,
         });
       }
-      toast.error(
-        '❌ Failed to connect to server.\nPlease check your connection or try again later.',
-        {
-          duration: 5000,
-        }
-      );
     }
     return Promise.reject(error instanceof Error ? error : new Error(String(error)));
   }

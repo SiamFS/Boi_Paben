@@ -64,7 +64,7 @@ export default function CategoryBooks() {
           </div>
         )}
 
-        {error ? (
+        {error && error?.code !== 'NETWORK_ERROR' ? (
           <div className="py-8">
             <ServerErrorHandler 
               error={error} 
@@ -72,7 +72,7 @@ export default function CategoryBooks() {
               retryCount={retryCount}
             />
           </div>
-        ) : (
+        ) : !error ? (
           <>
             {!isLoading && filteredBooks.length === 0 ? (
               <div className="py-16 text-center">

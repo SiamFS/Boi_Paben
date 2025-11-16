@@ -24,16 +24,17 @@ export const createServer = async () => {
   
   const corsOptions = {
     origin: (origin, callback) => {
-      // List of allowed origins
+      // List of allowed origins for both development and production
       const allowedOrigins = [
         'http://localhost:5173',
         'http://localhost:5174',
         'http://127.0.0.1:5173',
+        'https://boi-paben.onrender.com',
         process.env.CLIENT_URL_LOCAL,
         process.env.CLIENT_URL,
-      ].filter(Boolean); // Remove undefined values
+      ].filter(Boolean);
 
-      // If no origin (like for mobile apps or curl requests), allow it
+      // Allow requests with no origin (mobile apps, curl requests) or matching origins
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
