@@ -178,13 +178,14 @@ export default function BookCard({ book, listView = false }) {
     );
   }
   return (
-    <motion.div
-      whileHover={{ y: -8, scale: 1.02 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="relative h-full group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <Link to={`/book/${book._id}`} className="block h-full">
+      <motion.div
+        whileHover={{ y: -8, scale: 1.02 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="relative h-full group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
       <div className="relative h-full flex flex-col overflow-hidden bg-gradient-to-br from-card via-card to-card/80 border border-border/50 hover:border-border transition-all duration-300 rounded-xl shadow-sm hover:shadow-xl">
         {/* Image Container */}
         <div className="relative aspect-[3/4] overflow-hidden bg-muted rounded-t-xl">
@@ -217,25 +218,25 @@ export default function BookCard({ book, listView = false }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center"
+              className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center pointer-events-none"
             >
-              <Link to={`/book/${book._id}`}>
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="bg-white/90 hover:bg-white text-gray-900 shadow-lg backdrop-blur-sm"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </Button>
-              </Link>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="bg-white/90 hover:bg-white text-gray-900 shadow-lg backdrop-blur-sm"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </Button>
             </motion.div>
           )}
-        </div>        {/* Content Container */}
+        </div>
+
+        {/* Content Container */}
         <div className="p-3 sm:p-4 flex-grow flex flex-col bg-gradient-to-b from-card to-card/50">
           <div className="flex-grow space-y-1 sm:space-y-2">
             <h3 
-              className="font-bold text-sm sm:text-base leading-tight text-foreground hover:text-primary transition-colors duration-200 cursor-pointer line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]" 
+              className="font-bold text-sm sm:text-base leading-tight text-foreground hover:text-primary transition-colors duration-200 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]" 
               title={book.bookTitle}
             >
               {book.bookTitle}
@@ -259,7 +260,11 @@ export default function BookCard({ book, listView = false }) {
                 <Button
                   size="sm"
                   variant={inCart ? 'secondary' : 'default'}
-                  onClick={handleAddToCart}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleAddToCart(e);
+                  }}
                   disabled={inCart || book.availability === 'sold'}
                   className="transition-all duration-200 hover:scale-105 p-2 sm:p-2.5"
                 >
@@ -285,6 +290,7 @@ export default function BookCard({ book, listView = false }) {
         </div>
       </div>
     </motion.div>
+    </Link>
   );
 }
 

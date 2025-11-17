@@ -1,8 +1,63 @@
-// Cache system with time limits for BoiPaben
+// Cache system with localStorage persistence and time limits for BoiPaben
 class Cache {
   constructor() {
     this.cache = new Map();
     this.timers = new Map();
+    this.loadFromLocalStorage();
+  }
+
+  loadFromLocalStorage() {
+    try {
+      const stored = localStorage.getItem('app_cache');
+      if (stored) {
+        const data = JSON.parse(stored);
+        const now = Date.now();
+        
+        // Load non-expired items
+        Object.entries(data).forEach(([key, item]) => {
+          if (item.expiresAt > now) {
+            this.cache.set(key, item.value);
+            // Set timer for remaining time
+            const remainingTtl = Math.floor((item.expiresAt - now) / 1000);
+            this.setTimer(key, remainingTtl);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading cache from localStorage:', error);
+    }
+  }
+
+  saveToLocalStorage() {
+    try {
+      const data = {};
+      const now = Date.now();
+      
+      this.cache.forEach((value, key) => {
+        // Calculate expiration time from timer
+        const timer = this.timers.get(key);
+        if (timer) {
+          data[key] = {
+            value,
+            expiresAt: now + (timer._idleTimeout || 3600000) // Default 1 hour if no timer
+          };
+        }
+      });
+      
+      localStorage.setItem('app_cache', JSON.stringify(data));
+    } catch (error) {
+      console.error('Error saving cache to localStorage:', error);
+    }
+  }
+
+  setTimer(key, ttlSeconds) {
+    const timer = setTimeout(() => {
+      this.cache.delete(key);
+      this.timers.delete(key);
+      this.saveToLocalStorage();
+    }, ttlSeconds * 1000);
+    
+    this.timers.set(key, timer);
   }
 
   set(key, value, ttlSeconds = 3600) {
@@ -15,12 +70,11 @@ class Cache {
     this.cache.set(key, value);
 
     // Set expiration timer
-    const timer = setTimeout(() => {
-      this.cache.delete(key);
-      this.timers.delete(key);
-    }, ttlSeconds * 1000);
-
-    this.timers.set(key, timer);
+    this.setTimer(key, ttlSeconds);
+    
+    // Persist to localStorage
+    this.saveToLocalStorage();
+    
     return value;
   }
 
@@ -37,7 +91,9 @@ class Cache {
       clearTimeout(this.timers.get(key));
       this.timers.delete(key);
     }
-    return this.cache.delete(key);
+    const result = this.cache.delete(key);
+    this.saveToLocalStorage();
+    return result;
   }
 
   clear() {
@@ -47,6 +103,7 @@ class Cache {
     }
     this.timers.clear();
     this.cache.clear();
+    localStorage.removeItem('app_cache');
   }
 
   size() {
