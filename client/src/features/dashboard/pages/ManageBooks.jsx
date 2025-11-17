@@ -32,6 +32,8 @@ export default function ManageBooks() {
     onSuccess: () => {
       queryClient.invalidateQueries(['userBooks']);
       toast.success('Book deleted successfully');
+      // Reload the page to refresh the list
+      refetch();
     },
     onError: (error) => {
       const message = error?.message || 'Failed to delete book';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,6 +32,7 @@ export default function EditBook() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const { data: book, isLoading, error, refetch } = useQuery({
@@ -107,6 +108,11 @@ export default function EditBook() {
       };
 
       await bookService.updateBook(id, bookData);
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries(['book', id]);
+      queryClient.invalidateQueries(['userBooks']);
+      
       toast.success('Book updated successfully!');
       navigate('/dashboard/manage');
     } catch (error) {
