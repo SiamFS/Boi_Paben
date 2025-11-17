@@ -22,14 +22,18 @@ export default function Shop() {
       category: selectedCategory,
     }),
     retry: (failureCount, error) => {
-      // Retry up to 3 times for server errors
-      if (error?.code === 'NETWORK_ERROR' || error?.status >= 500) {
-        return failureCount < 3;
+      // Retry up to 4 times for server cold starts (Render hosting)
+      if (error?.code === 'NETWORK_ERROR' || error?.code === 'ECONNABORTED' || error?.status >= 500) {
+        return failureCount < 4;
       }
       return false;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000, // 5 minutes - consistent with other pages
+    retryDelay: (attemptIndex) => {
+      // Progressive delays: 15s, 30s, 45s, 60s for Render cold starts
+      return Math.min(15000 * (attemptIndex + 1), 60000);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in v5)
   });
   const handleRetry = async () => {
     setRetryCount(prev => prev + 1);

@@ -60,21 +60,24 @@ const ErrorContent = ({
 
       <div className="space-y-3">
         <h3 className="text-xl font-bold">
-          {isServerInactive ? 'Server Starting Up' : 'Connection Error'}
+          {isServerInactive ? 'Backend Server Starting' : 'Connection Error'}
         </h3>
         
         <p className="text-muted-foreground max-w-md mx-auto">
           {isServerInactive ? (
             <>
-              Our server is waking up from sleep mode. This usually takes 30-60 seconds for the first request.
+              <span className="block font-medium text-foreground mb-2">
+                Backend hosted on Render (Free Tier)
+              </span>
+              The server is starting up from sleep mode. This typically takes <strong>1-2 minutes</strong> for the first request.
               {countdown > 0 && (
-                <span className="block mt-2 font-medium text-primary">
-                  Retrying in {countdown}s...
+                <span className="block mt-3 font-semibold text-primary text-lg">
+                  Auto-retrying in {countdown}s...
                 </span>
               )}
             </>
           ) : (
-            'Something went wrong while connecting to the server. Please check your internet connection and try again.'
+            'Unable to connect to the server. Please check your internet connection and try again.'
           )}
         </p>
 
@@ -105,12 +108,15 @@ const ErrorContent = ({
       </div>
 
       {isServerInactive && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm">
-          <div className="flex items-start gap-2">
-            <Wifi className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-            <div className="text-yellow-800 dark:text-yellow-200">
-              <p className="font-medium mb-1">Why does this happen?</p>
-              <p>Free hosting services like Render put inactive servers to sleep to save resources. The server needs a moment to wake up when receiving the first request after a period of inactivity.</p>
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm">
+          <div className="flex items-start gap-3">
+            <Wifi className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-blue-900 dark:text-blue-200 text-left">
+              <p className="font-semibold mb-2">📌 Professional Note for Recruiters:</p>
+              <p className="mb-2">This project uses <strong>Render's free hosting tier</strong> for the backend API. Free tier servers automatically sleep after 15 minutes of inactivity to conserve resources.</p>
+              <p className="text-xs opacity-90">⏱️ First request after inactivity: ~50-120 seconds startup time</p>
+              <p className="text-xs opacity-90">⚡ Subsequent requests: Instant response</p>
+              <p className="text-xs opacity-90 mt-2">💡 In production, paid hosting ensures 24/7 availability with zero cold starts.</p>
             </div>
           </div>
         </div>
@@ -157,7 +163,8 @@ export default function ServerErrorHandler({
   // Auto-retry with countdown for server inactive errors
   useEffect(() => {
     if (isServerInactive && retryCount < maxRetries) {
-      const retryDelay = Math.min(5000 * Math.pow(2, retryCount), 30000); // Exponential backoff, max 30s
+      // Longer delays for Render cold starts: 15s, 30s, 45s
+      const retryDelay = retryCount === 0 ? 15000 : Math.min(15000 * (retryCount + 1), 60000);
       setCountdown(Math.ceil(retryDelay / 1000));
       
       const interval = setInterval(() => {

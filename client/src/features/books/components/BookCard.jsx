@@ -178,7 +178,7 @@ export default function BookCard({ book, listView = false }) {
     );
   }
   return (
-    <Link to={`/book/${book._id}`} className="block h-full">
+    <Link to={`/book/${book._id}`} className="block h-full no-underline">
       <motion.div
         whileHover={{ y: -8, scale: 1.02 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}

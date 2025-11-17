@@ -34,7 +34,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds default timeout
+  timeout: 120000, // 120 seconds (2 minutes) for Render cold starts
 });
 
 apiClient.interceptors.request.use(
@@ -46,16 +46,16 @@ apiClient.interceptors.request.use(
     
     // Set request priority if provided (can be 'high', 'normal', 'low')
     if (config.priority) {
-      // Adjust timeout based on priority
+      // Adjust timeout based on priority - longer for production/Render
       switch (config.priority) {
         case 'high':
-          config.timeout = 15000; // 15 seconds for high priority
+          config.timeout = isProduction ? 90000 : 15000; // 90s production, 15s dev
           break;
         case 'low':
-          config.timeout = 45000; // 45 seconds for low priority
+          config.timeout = isProduction ? 120000 : 45000; // 120s production, 45s dev
           break;
         default:
-          config.timeout = 30000; // 30 seconds for normal priority
+          config.timeout = isProduction ? 120000 : 30000; // 120s production, 30s dev
       }
       
       // Add priority as a custom header (could be used by server)
@@ -139,21 +139,28 @@ apiClient.interceptors.response.use(
           // We have cache - show restart message
           if (isProduction) {
             toast.loading(
-              '⏳ Backend is restarting...\nShowing cached content in the meantime.',
-              { duration: 5000 }
+              'Backend server starting (Render hosting)...\nThis may take 1-2 minutes. Showing cached data.',
+              { duration: 8000, id: 'backend-starting' }
             );
           } else {
             toast.loading(
-              '⏳ Backend is not responding...\nShowing cached content.',
+              'Backend is not responding...\nShowing cached content.',
               { duration: 4000 }
             );
           }
         } else {
-          // No cache - show error message
-          toast.error(
-            '❌ Failed to connect to server.\nPlease check your connection.',
-            { duration: 4000 }
-          );
+          // No cache - show waiting message
+          if (isProduction) {
+            toast.loading(
+              'Backend server starting up (Render Free Tier)...\nPlease wait ~1-2 minutes for first load.',
+              { duration: 10000, id: 'backend-starting' }
+            );
+          } else {
+            toast.error(
+              'Failed to connect to server.\nPlease check your connection.',
+              { duration: 4000 }
+            );
+          }
         }
       }
 
