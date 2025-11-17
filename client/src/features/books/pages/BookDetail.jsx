@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ShoppingCart, AlertCircle, MapPin, Phone, Shield, Package } from 'lucide-react';
 import { bookService } from '../services/bookService';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCartStore } from '@/features/cart/store/cartStore';
 import { formatCurrency, reportReasons } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';

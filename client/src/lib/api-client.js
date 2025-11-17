@@ -4,19 +4,22 @@ import cache from './cache';
 
 // Auto-detect environment and use appropriate API URL
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const isDevelopment = import.meta.env.VITE_NODE_ENV === 'development';
+const isDevelopment = import.meta.env.MODE === 'development' || import.meta.env.DEV;
 
-// Choose API URL based on environment and location
-const API_URL = isLocalhost || isDevelopment 
+// Choose API URL based on ACTUAL hostname, not env variable
+// If running on localhost, use local API. If on deployed domain, use production API
+const API_URL = isLocalhost
   ? import.meta.env.VITE_API_URL_LOCAL || 'http://localhost:5000'
   : import.meta.env.VITE_API_URL_PRODUCTION || 'https://boi-paben-backend.onrender.com';
 
-console.log(`Running in ${isDevelopment ? 'development' : 'production'} mode`);
+console.log(`Running on: ${window.location.hostname}`);
 console.log(`Using API URL: ${API_URL}`);
+console.log(`Mode: ${import.meta.env.MODE}`);
 
 // Track if we've shown backend error message in this session (show only once)
 let hasShownBackendError = false;
 let firstRequestTime = null;
+let pendingRequests = new Set();
 const isProduction = !isLocalhost && !isDevelopment;
 
 // Cache configuration: which endpoints to cache and for how long (in seconds)
@@ -49,6 +52,11 @@ apiClient.interceptors.request.use(
     if (!firstRequestTime) {
       firstRequestTime = Date.now();
     }
+    
+    // Track pending request
+    const requestId = Math.random().toString(36);
+    pendingRequests.add(requestId);
+    config.__requestId = requestId;
     
     // Set request priority if provided (can be 'high', 'normal', 'low')
     if (config.priority) {
@@ -95,6 +103,11 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => {
+    // Remove from pending requests
+    if (response.config.__requestId) {
+      pendingRequests.delete(response.config.__requestId);
+    }
+    
     // Cache successful GET responses
     if (response.config.method === 'get') {
       const cacheKey = response.config.url;
@@ -119,6 +132,11 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Remove from pending requests
+    if (error.config?.__requestId) {
+      pendingRequests.delete(error.config.__requestId);
+    }
+    
     // Handle cached request interception
     if (error.isFromCache) {
       return Promise.resolve({
@@ -139,9 +157,11 @@ apiClient.interceptors.response.use(
       
       // Calculate time since first request
       const timeSinceFirstRequest = firstRequestTime ? Date.now() - firstRequestTime : 0;
-      const shouldShowMessage = timeSinceFirstRequest > 15000; // Only show after 15 seconds
+      // Check if there are still pending requests
+      const hasActiveFetch = pendingRequests.size > 0;
+      const shouldShowMessage = timeSinceFirstRequest > 15000 && hasActiveFetch; // Only show after 15 seconds AND if still fetching
 
-      // Show ONE message per session only, and only after 15 seconds
+      // Show ONE message per session only, and only after 15 seconds of actual pending requests
       if (!hasShownBackendError && shouldShowMessage) {
         hasShownBackendError = true;
         

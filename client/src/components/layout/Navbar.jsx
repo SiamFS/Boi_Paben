@@ -11,7 +11,7 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { useCartStore } from '@/features/cart/store/cartStore';
 import { Button } from '@/components/ui/Button';

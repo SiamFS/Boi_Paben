@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { bookService } from '@/features/books/services/bookService';
 import BookForm from '../components/BookForm';
 import { FormLoadingSkeleton } from '@/components/ui/LoadingComponents';

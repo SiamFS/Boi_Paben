@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { bookService } from '@/features/books/services/bookService';
 import { bookCategories } from '@/lib/utils';
 import cache from '@/lib/cache';

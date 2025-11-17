@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { BookOpen, DollarSign, TrendingUp } from 'lucide-react';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { bookService } from '@/features/books/services/bookService';
 import { formatCurrency } from '@/lib/utils';
 import { StatsLoadingSkeleton, TableLoadingSkeleton } from '@/components/ui/LoadingComponents';

@@ -5,7 +5,8 @@
  */
 
 const API_URL = import.meta.env.VITE_API_URL_PRODUCTION || 'https://boi-paben-backend.onrender.com';
-const isProduction = import.meta.env.VITE_NODE_ENV === 'production';
+const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const isProduction = !isLocalhost;
 
 let warmupAttempted = false;
 let warmupSuccessful = false;

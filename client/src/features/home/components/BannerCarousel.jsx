@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCards, Autoplay } from 'swiper/modules';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import recommendationService from '@/services/recommendationService';
 import 'swiper/css';
 import 'swiper/css/effect-cards';

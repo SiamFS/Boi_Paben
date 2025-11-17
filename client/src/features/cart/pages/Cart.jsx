@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCartStore } from '../store/cartStore';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';

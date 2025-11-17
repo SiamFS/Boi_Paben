@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Eye, BookOpen } from 'lucide-react';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCartStore } from '@/features/cart/store/cartStore';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';

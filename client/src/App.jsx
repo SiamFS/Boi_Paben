@@ -8,8 +8,6 @@ import PrivateRoute from '@/features/auth/components/PrivateRoute';
 import Layout from '@/components/layout/Layout';
 import DashboardLayout from '@/features/dashboard/components/DashboardLayout';
 import { prefetchEssentialData } from '@/lib/prefetch';
-import { isBackendReady } from '@/lib/backend-warmup';
-import toast from 'react-hot-toast';
 
 const Home = lazy(() => import('@/features/home/pages/Home'));
 const Shop = lazy(() => import('@/features/books/pages/Shop'));
@@ -36,22 +34,7 @@ function App() {
 
   // Dismiss loading screen after short delay to allow React to initialize
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoad(false);
-      
-      // Show backend status after initial load completes - only if it takes too long
-      const checkTimer = setTimeout(() => {
-        const isProduction = import.meta.env.VITE_NODE_ENV === 'production';
-        if (isProduction && !isBackendReady()) {
-          toast.loading(
-            'Backend server starting...\nFirst load may take 1-2 minutes.',
-            { duration: 6000, id: 'backend-warmup' }
-          );
-        }
-      }, 15000); // Show only after 15 seconds
-      
-      return () => clearTimeout(checkTimer);
-    }, 800);
+    const timer = setTimeout(() => setIsInitialLoad(false), 800);
     return () => clearTimeout(timer);
   }, []);
 

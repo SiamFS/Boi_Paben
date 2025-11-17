@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ThumbsUp, ThumbsDown, MessageSquare, Edit, Trash2, Send } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { formatDate } from '@/lib/utils';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { blogService } from '../services/blogService';
 import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';

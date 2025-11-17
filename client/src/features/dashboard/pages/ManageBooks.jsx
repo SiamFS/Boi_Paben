@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Edit, Trash2, Eye, BookOpen } from 'lucide-react';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { bookService } from '@/features/books/services/bookService';
 import { Button } from '@/components/ui/Button';
 import { formatCurrency } from '@/lib/utils';
