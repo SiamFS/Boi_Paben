@@ -16,6 +16,7 @@ console.log(`Using API URL: ${API_URL}`);
 
 // Track if we've shown backend error message in this session (show only once)
 let hasShownBackendError = false;
+let firstRequestTime = null;
 const isProduction = !isLocalhost && !isDevelopment;
 
 // Cache configuration: which endpoints to cache and for how long (in seconds)
@@ -42,6 +43,11 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    // Track first request time
+    if (!firstRequestTime) {
+      firstRequestTime = Date.now();
     }
     
     // Set request priority if provided (can be 'high', 'normal', 'low')
@@ -130,9 +136,13 @@ apiClient.interceptors.response.use(
     if (!error.response && (error.code === 'ECONNABORTED' || error.message === 'Network Error' || error.code === 'ECONNREFUSED')) {
       const cacheKey = error.config?.url;
       const cachedData = cacheKey ? cache.get(cacheKey) : null;
+      
+      // Calculate time since first request
+      const timeSinceFirstRequest = firstRequestTime ? Date.now() - firstRequestTime : 0;
+      const shouldShowMessage = timeSinceFirstRequest > 15000; // Only show after 15 seconds
 
-      // Show ONE message per session only
-      if (!hasShownBackendError) {
+      // Show ONE message per session only, and only after 15 seconds
+      if (!hasShownBackendError && shouldShowMessage) {
         hasShownBackendError = true;
         
         if (cachedData) {

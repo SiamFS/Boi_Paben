@@ -39,7 +39,7 @@ function App() {
     const timer = setTimeout(() => {
       setIsInitialLoad(false);
       
-      // Show backend status after initial load completes
+      // Show backend status after initial load completes - only if it takes too long
       const checkTimer = setTimeout(() => {
         const isProduction = import.meta.env.VITE_NODE_ENV === 'production';
         if (isProduction && !isBackendReady()) {
@@ -48,7 +48,7 @@ function App() {
             { duration: 6000, id: 'backend-warmup' }
           );
         }
-      }, 1000);
+      }, 15000); // Show only after 15 seconds
       
       return () => clearTimeout(checkTimer);
     }, 800);
