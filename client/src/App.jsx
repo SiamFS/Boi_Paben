@@ -1,9 +1,8 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
-import LoadingScreen from '@/components/ui/LoadingScreen';
 import PrivateRoute from '@/features/auth/components/PrivateRoute';
 import Layout from '@/components/layout/Layout';
 import DashboardLayout from '@/features/dashboard/components/DashboardLayout';
@@ -30,13 +29,6 @@ const DummyFallback = () => null;
 
 function App() {
   const queryClient = useQueryClient();
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  // Dismiss loading screen after short delay to allow React to initialize
-  useEffect(() => {
-    const timer = setTimeout(() => setIsInitialLoad(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Prefetch essential data without blocking the UI
   useEffect(() => {
@@ -46,11 +38,6 @@ function App() {
       console.error("Error prefetching data:", error);
     }
   }, [queryClient]);
-
-  // Show loading screen only on initial page load
-  if (isInitialLoad) {
-    return <LoadingScreen />;
-  }
 
   return (
     <ThemeProvider>

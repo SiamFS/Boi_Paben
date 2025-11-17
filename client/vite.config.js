@@ -21,13 +21,25 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       }
-    }
+    },
+    headers: {
+      'Cache-Control': 'public, max-age=31536000',
+    },
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    force: false,
+  },
+  cacheDir: '.vite',
+  css: {
+    devSourcemap: false,
   },
   build: {
     outDir: 'dist',
     sourcemap: false,
     minify: 'terser',
     chunkSizeWarningLimit: 1000,
+    copyPublicDir: true,
     rollupOptions: {
       output: {
         manualChunks: {
