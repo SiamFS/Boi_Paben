@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { bookService } from '@/features/books/services/bookService';
 import { bookCategories } from '@/lib/utils';
+import cache from '@/lib/cache';
 import { 
   createBookValidationSchema,
   sanitizeText,
@@ -15,16 +16,21 @@ import toast from 'react-hot-toast';
 
 const bookSchema = createBookValidationSchema();
 
+const CACHED_ADDRESS_KEY = 'lastUsedAddress';
+
 export default function UploadBook() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const [useAutoFill, setUseAutoFill] = useState(false);
+  const [hasCachedAddress, setHasCachedAddress] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm({
     resolver: zodResolver(bookSchema),
     defaultValues: {
@@ -33,6 +39,28 @@ export default function UploadBook() {
       productCondition: 'New',
     },
   });
+
+  // Check if cached address exists on mount
+  useEffect(() => {
+    const cachedAddress = cache.get(CACHED_ADDRESS_KEY);
+    if (cachedAddress) {
+      setHasCachedAddress(true);
+    }
+  }, []);
+
+  // Auto-fill address when toggle is enabled
+  useEffect(() => {
+    if (useAutoFill) {
+      const cachedAddress = cache.get(CACHED_ADDRESS_KEY);
+      if (cachedAddress) {
+        setValue('streetAddress', cachedAddress.streetAddress || '');
+        setValue('cityTown', cachedAddress.cityTown || '');
+        setValue('district', cachedAddress.district || '');
+        setValue('zipCode', cachedAddress.zipCode || '');
+        toast.success('Address auto-filled from previous upload');
+      }
+    }
+  }, [useAutoFill, setValue]);
   const onSubmit = async (data) => {
     if (!imageFile) {
       toast.error('Please select a book image');
@@ -77,6 +105,15 @@ export default function UploadBook() {
       };
 
       await bookService.uploadBook(bookData);
+      
+      // Cache the address for next upload
+      cache.set(CACHED_ADDRESS_KEY, {
+        streetAddress: data.streetAddress,
+        cityTown: data.cityTown,
+        district: data.district,
+        zipCode: data.zipCode,
+      }, 30 * 24 * 60 * 60); // Cache for 30 days
+      
       toast.success('Book uploaded successfully!');
       navigate('/dashboard/manage');
     } catch (error) {
@@ -97,6 +134,30 @@ export default function UploadBook() {
         </div>
       </div>
 
+      {hasCachedAddress && (
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+              💾 Cached address available
+            </p>
+            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+              Use the same pickup address from your last upload
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setUseAutoFill(!useAutoFill)}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              useAutoFill
+                ? 'bg-blue-600 text-white'
+                : 'bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-200 hover:bg-blue-300 dark:hover:bg-blue-700'
+            }`}
+          >
+            {useAutoFill ? '✓ Auto-fill ON' : 'Auto-fill OFF'}
+          </button>
+        </div>
+      )}
+
       <BookForm
         register={register}
         errors={errors}
@@ -105,6 +166,7 @@ export default function UploadBook() {
         setImageFile={setImageFile}
         loading={loading}
         submitText="Upload Book"
+        showAutoFillHint={useAutoFill}
       />
     </div>
   );

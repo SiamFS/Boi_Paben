@@ -14,6 +14,7 @@ export default function BookForm({
   loading,
   submitText,
   defaultImage,
+  showAutoFillHint = false,
 }) {
   const [imageErrors, setImageErrors] = useState([]);
   const [dragActive, setDragActive] = useState(false);  const handleImageChange = (file) => {
@@ -335,7 +336,14 @@ export default function BookForm({
       </div>
 
       <div className="space-y-4">
-        <h3 className="font-semibold">Pickup Address</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Pickup Address</h3>
+          {showAutoFillHint && (
+            <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded">
+              ✓ Auto-filled
+            </span>
+          )}
+        </div>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="streetAddress" className="label">Street Address *</label>
@@ -448,4 +456,5 @@ BookForm.propTypes = {
   loading: PropTypes.bool,
   submitText: PropTypes.string.isRequired,
   defaultImage: PropTypes.string,
+  showAutoFillHint: PropTypes.bool,
 };

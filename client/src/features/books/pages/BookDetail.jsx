@@ -255,31 +255,7 @@ export default function BookDetail() {
               </div>
             </div>
 
-            {/* Seller Information */}
-            <div className="bg-card border rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Seller Information</h3>
-              <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  Sold by: <span className="font-medium text-foreground">{book.seller}</span>
-                </p>
-                
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium">{book.streetAddress}</p>
-                    <p className="text-muted-foreground">{book.cityTown}, {book.district}</p>
-                    {book.zipCode && <p className="text-muted-foreground">Zip: {book.zipCode}</p>}
-                  </div>
-                </div>
-
-                {book.contactNumber && (
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    <p className="text-sm font-medium">{book.contactNumber}</p>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Seller Information - Hidden */}
           </motion.div>
         </div>
       </div>

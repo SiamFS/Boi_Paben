@@ -72,7 +72,7 @@ export default function CategoryBooks() {
               retryCount={retryCount}
             />
           </div>
-        ) : !error ? (
+        ) : (
           <>
             {!isLoading && filteredBooks.length === 0 ? (
               <div className="py-16 text-center">
@@ -88,11 +88,11 @@ export default function CategoryBooks() {
                   <div className="text-center mt-12">
                     <Link to="/shop">
                       <Button size="lg" variant="outline">
-                    View All Books
-                  </Button>
-                </Link>
-              </div>
-            )}
+                        View All Books
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </>
             )}
           </>
