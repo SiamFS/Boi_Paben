@@ -305,8 +305,10 @@ export const validateBookData = (bookData) => {
   Object.assign(errors, enumFields.errors);
   Object.assign(sanitizedData, enumFields.sanitizedData);
   
-  // Add other required fields as-is after basic sanitization
-  if (bookData.imageURL) {
+  // Add other required fields after validation
+  if (!bookData.imageURL) {
+    errors.imageURL = ['Image URL is required'];
+  } else {
     sanitizedData.imageURL = sanitizeText(bookData.imageURL);
   }
   

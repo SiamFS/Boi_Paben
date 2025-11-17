@@ -29,8 +29,8 @@ const bookValidationRules = [
   body('bookTitle').trim().notEmpty().withMessage('Book title is required'),
   body('authorName').trim().notEmpty().withMessage('Author name is required'),
   body('Price').isNumeric().withMessage('Price must be a number'),
-  body('category').notEmpty().withMessage('Category is required'),
-  body('imageURL').isURL().withMessage('Valid image URL required')
+  body('category').notEmpty().withMessage('Category is required')
+  // imageURL validation is handled in bookController via validateBookData
 ];
 
 const handleValidationErrors = (req, res, next) => {
