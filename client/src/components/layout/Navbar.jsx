@@ -246,12 +246,12 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
         <>
           {/* Backdrop overlay */}
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-200"
             onClick={() => setIsMenuOpen(false)}
           />
           
-          {/* Side menu - slides from right */}
-          <div className="fixed top-16 right-0 bottom-0 w-64 bg-card shadow-lg z-50 md:hidden animate-slide-in-right overflow-y-auto border-l border-border">
+          {/* Side menu - instant slide from right */}
+          <div className="fixed top-16 right-0 bottom-0 w-64 bg-card shadow-xl z-50 md:hidden overflow-y-auto border-l border-border transform transition-transform duration-200 ease-out">
               <div className="flex flex-col gap-4 p-4">
                 {navItems.map((item) => (
                   <Link
