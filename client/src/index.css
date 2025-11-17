@@ -131,7 +131,9 @@
   }
 
   .skeleton {
-    @apply animate-pulse rounded-md bg-muted;
+    @apply rounded-md bg-gradient-to-r from-muted via-white to-muted dark:from-gray-700 dark:via-gray-600 dark:to-gray-700;
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
   }
 
   .loading-spinner {
@@ -168,10 +170,10 @@
 
   @keyframes shimmer {
     0% {
-      transform: translateX(-100%);
+      background-position: -200% 0;
     }
     100% {
-      transform: translateX(100%);
+      background-position: 200% 0;
     }
   }
 

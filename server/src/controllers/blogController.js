@@ -4,29 +4,19 @@ import { getCollection } from '../config/database.js';
 export const blogController = {
   async getAllPosts(req, res) {
     const blogCollection = getCollection('blogs');
-    const reactionCollection = getCollection('reactions');
     
     const posts = await blogCollection
       .find({})
       .sort({ createdAt: -1 })
       .toArray();
 
+    // If user is logged in, add their reaction to each post
     if (req.user) {
-      const userReactions = await reactionCollection
-        .find({ userId: req.user.uid })
-        .toArray();
-      
-      const reactionMap = {};
-      userReactions.forEach(reaction => {
-        reactionMap[reaction.postId.toString()] = reaction.type;
-      });
-
-      const postsWithReactions = posts.map(post => ({
+      const postsWithUserReaction = posts.map(post => ({
         ...post,
-        userReaction: reactionMap[post._id.toString()] || null
+        userReaction: post.reactions?.[req.user.uid] || null
       }));
-
-      return res.json(postsWithReactions);
+      return res.json(postsWithUserReaction);
     }
 
     res.json(posts);
@@ -63,6 +53,7 @@ export const blogController = {
       authorPhoto: req.user.photoURL || null,
       likes: 0,
       dislikes: 0,
+      reactions: {}, // Embedded reactions object
       comments: [],
       createdAt: new Date(),
       updatedAt: new Date()
@@ -122,7 +113,6 @@ export const blogController = {
     }
 
     const blogCollection = getCollection('blogs');
-    const reactionCollection = getCollection('reactions');
     
     const post = await blogCollection.findOne({ _id: new ObjectId(id) });
 
@@ -134,8 +124,7 @@ export const blogController = {
       return res.status(403).json({ error: 'Unauthorized to delete this post' });
     }
 
-    await reactionCollection.deleteMany({ postId: new ObjectId(id) });
-    
+    // No need to delete from reactions collection anymore - reactions are embedded
     const result = await blogCollection.deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
@@ -275,81 +264,80 @@ export const blogController = {
     }
 
     const blogCollection = getCollection('blogs');
-    const reactionCollection = getCollection('reactions');
-    
     const post = await blogCollection.findOne({ _id: new ObjectId(id) });
     
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    const existingReaction = await reactionCollection.findOne({
-      postId: new ObjectId(id),
-      userId: req.user.uid
-    });
+    const userId = req.user.uid;
+    const reactions = post.reactions || {};
+    const currentReaction = reactions[userId];
 
-    if (existingReaction) {
-      if (existingReaction.type === reactionType) {
-        await reactionCollection.deleteOne({ _id: existingReaction._id });
-        
-        const updateField = `${reactionType}s`;
-        await blogCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $inc: { [updateField]: -1 } }
-        );
-      } else {
-        await reactionCollection.updateOne(
-          { _id: existingReaction._id },
-          { $set: { type: reactionType, updatedAt: new Date() } }
-        );
-        
-        const oldField = `${existingReaction.type}s`;
-        const newField = `${reactionType}s`;
-        await blogCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { 
-            $inc: { 
-              [oldField]: -1,
-              [newField]: 1
-            } 
-          }
-        );
-      }
-    } else {
-      await reactionCollection.insertOne({
-        postId: new ObjectId(id),
-        userId: req.user.uid,
-        type: reactionType,
-        createdAt: new Date()
-      });
-      
+    // Toggle or switch reaction
+    if (currentReaction === reactionType) {
+      // Remove reaction (toggle off)
+      delete reactions[userId];
       const updateField = `${reactionType}s`;
       await blogCollection.updateOne(
         { _id: new ObjectId(id) },
-        { $inc: { [updateField]: 1 } }
+        {
+          $set: { reactions },
+          $inc: { [updateField]: -1 }
+        }
+      );
+    } else if (currentReaction) {
+      // Switch reaction
+      reactions[userId] = reactionType;
+      const oldField = `${currentReaction}s`;
+      const newField = `${reactionType}s`;
+      await blogCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: { reactions },
+          $inc: { 
+            [oldField]: -1,
+            [newField]: 1
+          }
+        }
+      );
+    } else {
+      // New reaction
+      reactions[userId] = reactionType;
+      const updateField = `${reactionType}s`;
+      await blogCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: { reactions },
+          $inc: { [updateField]: 1 }
+        }
       );
     }
 
     const updatedPost = await blogCollection.findOne({ _id: new ObjectId(id) });
-    const userReaction = await reactionCollection.findOne({
-      postId: new ObjectId(id),
-      userId: req.user.uid
-    });
 
     res.json({
       post: updatedPost,
-      userReaction: userReaction ? userReaction.type : null
+      userReaction: updatedPost.reactions?.[userId] || null
     });
   },
 
   async getUserReactions(req, res) {
     const { userId } = req.params;
-    const reactionCollection = getCollection('reactions');
+    const blogCollection = getCollection('blogs');
     
-    const reactions = await reactionCollection
-      .find({ userId })
+    // Find all posts where user has reacted
+    const posts = await blogCollection
+      .find({ [`reactions.${userId}`]: { $exists: true } })
+      .project({ _id: 1, title: 1, reactions: 1 })
       .toArray();
     
-    res.json(reactions);
+    const userReactions = posts.map(post => ({
+      postId: post._id,
+      postTitle: post.title,
+      type: post.reactions[userId]
+    }));
+    
+    res.json(userReactions);
   }
 };

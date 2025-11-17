@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trash2, ShoppingBag } from 'lucide-react';
@@ -27,11 +27,16 @@ export default function Cart() {
     contactNumber: '',
   });
 
+  // Memoize fetchCart to prevent recreation
+  const stableFetchCart = useCallback(() => {
+    fetchCart();
+  }, [fetchCart]);
+
   useEffect(() => {
     if (user) {
-      fetchCart();
+      stableFetchCart();
     }
-  }, [user, fetchCart]);
+  }, [user?.uid, stableFetchCart]); // Only depend on user ID, not entire user object
 
   const totalPrice = getTotalPrice();
   const shippingCost = 50;  const grandTotal = totalPrice + shippingCost;

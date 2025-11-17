@@ -13,23 +13,45 @@ export const cartController = {
 
   async getCartItems(req, res) {
     const cartCollection = getCollection('carts');
-    const bookCollection = getCollection('books');
     
-    const cartItems = await cartCollection
-      .find({ user_email: req.user.email })
-      .toArray();
-
-    const enrichedItems = await Promise.all(
-      cartItems.map(async (item) => {
-        const book = await bookCollection.findOne({ 
-          _id: new ObjectId(item.original_id) 
-        });
-        return {
-          ...item,
-          availability: book?.availability || 'unknown'
-        };
-      })
-    );
+    // Use aggregation with $lookup to join cart items with books in ONE query
+    const enrichedItems = await cartCollection.aggregate([
+      { $match: { user_email: req.user.email } },
+      {
+        $addFields: {
+          original_id_obj: { $toObjectId: '$original_id' }
+        }
+      },
+      {
+        $lookup: {
+          from: 'books',
+          localField: 'original_id_obj',
+          foreignField: '_id',
+          as: 'bookInfo'
+        }
+      },
+      {
+        $unwind: {
+          path: '$bookInfo',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          bookTitle: 1,
+          authorName: 1,
+          imageURL: 1,
+          Price: 1,
+          category: 1,
+          user_email: 1,
+          original_id: 1,
+          addedAt: 1,
+          availability: { $ifNull: ['$bookInfo.availability', 'unknown'] }
+        }
+      },
+      { $sort: { addedAt: -1 } }
+    ]).toArray();
 
     res.json(enrichedItems);
   },

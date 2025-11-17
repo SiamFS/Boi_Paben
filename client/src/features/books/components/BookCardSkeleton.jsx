@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 export default function BookCardSkeleton({ listView = false }) {
   if (listView) {
     return (
-      <div className="card flex gap-4 p-5 h-full animate-pulse">
+      <div className="card flex gap-4 p-5 h-full">
         <div className="w-24 h-32 bg-muted rounded-xl skeleton" />
         <div className="flex-grow flex flex-col justify-between min-w-0">
           <div className="flex-grow space-y-3">
@@ -26,7 +26,7 @@ export default function BookCardSkeleton({ listView = false }) {
   }
 
   return (
-    <div className="relative h-full animate-pulse">
+    <div className="relative h-full">
       <div className="card h-full flex flex-col overflow-hidden">
         <div className="aspect-[3/4] bg-muted skeleton rounded-t-xl" />
         <div className="p-4 flex-grow flex flex-col space-y-3">

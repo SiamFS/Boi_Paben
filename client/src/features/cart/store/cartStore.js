@@ -3,6 +3,20 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import apiClient from '@/lib/api-client';
 import toast from 'react-hot-toast';
 
+// Create stable fetchCart function outside of store to prevent re-creation
+const fetchCartAPI = async () => {
+  const token = localStorage.getItem('auth_token');
+  if (!token) return [];
+
+  try {
+    const response = await apiClient.get('/api/cart');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching cart:', error);
+    throw error;
+  }
+};
+
 export const useCartStore = create(
   persist(
     (set, get) => ({
@@ -10,15 +24,11 @@ export const useCartStore = create(
       loading: false,
 
       fetchCart: async () => {
-        const token = localStorage.getItem('auth_token');
-        if (!token) return;
-
         set({ loading: true });
         try {
-          const response = await apiClient.get('/api/cart');
-          set({ items: response.data, loading: false });
+          const items = await fetchCartAPI();
+          set({ items, loading: false });
         } catch (error) {
-          console.error('Error fetching cart:', error);
           set({ loading: false });
         }
       },

@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import { rateLimit } from 'express-rate-limit';
 import { connectDB } from './config/database.js';
+import { createIndexes } from './config/indexes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { startScheduler } from './services/scheduler.js';
 import bookRoutes from './routes/bookRoutes.js';
@@ -18,10 +19,17 @@ export const createServer = async () => {
   const app = express();
 
   // Connect to MongoDB asynchronously without blocking server startup
-  connectDB().catch(err => {
-    console.error('Failed to connect to MongoDB:', err);
-    // Server still starts, but with limited functionality
-  });
+  connectDB()
+    .then(() => {
+      // Create indexes after successful connection
+      createIndexes().catch(err => {
+        console.error('Failed to create indexes:', err);
+      });
+    })
+    .catch(err => {
+      console.error('Failed to connect to MongoDB:', err);
+      // Server still starts, but with limited functionality
+    });
   
   // Start scheduler asynchronously without blocking
   setImmediate(() => {

@@ -41,10 +41,19 @@ export function AuthProvider({ children }) {
       return cachedUser;
     }
 
+    // Also check Firestore user doc cache
+    const firestoreCacheKey = `firestore_user_${firebaseUser.uid}`;
+    let userData = cache.get(firestoreCacheKey);
+
     try {
-      const db = await getDB();
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-      const userData = userDoc.data() || {};
+      // Only fetch from Firestore if not cached
+      if (!userData) {
+        const db = await getDB();
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        userData = userDoc.data() || {};
+        // Cache Firestore data for 24 hours
+        cache.set(firestoreCacheKey, userData, 86400);
+      }
       
       const response = await apiClient.post('/api/auth/verify-firebase', {
         user: {
@@ -65,6 +74,11 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error('Error getting auth token:', error);
+      // Return cached data as fallback if available
+      if (cachedUser) {
+        console.log('Using cached auth data as fallback');
+        return cachedUser;
+      }
       throw error;
     }
   };

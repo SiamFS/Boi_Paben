@@ -31,16 +31,12 @@ const DummyFallback = () => null;
 function App() {
   const queryClient = useQueryClient();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [isLayoutReady, setIsLayoutReady] = useState(false);
 
-  // Keep loading screen visible until layout is ready
+  // Dismiss loading screen after short delay to allow React to initialize
   useEffect(() => {
-    if (isLayoutReady) {
-      // Add small delay to ensure smooth transition
-      const timer = setTimeout(() => setIsInitialLoad(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isLayoutReady]);
+    const timer = setTimeout(() => setIsInitialLoad(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Prefetch essential data without blocking the UI
   useEffect(() => {
@@ -63,7 +59,7 @@ function App() {
           {/* Use invisible fallback for route changes - don't show loading */}
           <Suspense fallback={<DummyFallback />}>
             <Routes>
-              <Route path="/" element={<Layout onReady={() => setIsLayoutReady(true)} />}>
+              <Route path="/" element={<Layout />}>
                 <Route index element={<Home />} />
                 <Route path="shop" element={<Shop />} />
                 <Route path="book/:id" element={<BookDetail />} />
@@ -76,7 +72,7 @@ function App() {
               
               <Route path="/dashboard" element={
                 <PrivateRoute>
-                  <DashboardLayout onReady={() => setIsLayoutReady(true)} />
+                  <DashboardLayout />
                 </PrivateRoute>
               }>
                 <Route index element={<Dashboard />} />

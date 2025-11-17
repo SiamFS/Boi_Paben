@@ -5,7 +5,7 @@ import Navbar from '@/components/layout/Navbar';
 import DashboardSidebar from './DashboardSidebar';
 import { Button } from '@/components/ui/Button';
 
-export default function DashboardLayout({ onReady }) {
+export default function DashboardLayout() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -19,13 +19,6 @@ export default function DashboardLayout({ onReady }) {
 
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
-
-  useEffect(() => {
-    // Signal that layout is ready when component mounts
-    if (onReady) {
-      onReady();
-    }
-  }, [onReady]);
 
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
