@@ -54,6 +54,9 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setIsMenuOpen(false);
+      setShowSuggestions(false);
+      setShowMobileSuggestions(false);
       navigate(`/search/${searchQuery}`);
       setSearchQuery('');
     }
@@ -169,13 +172,16 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
             {user ? (
               <div className="relative" ref={profileRef}>
                 <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsProfileOpen(!isProfileOpen);
+                  }}
+                  className="flex items-center gap-2 focus:outline-none"
                 >
                   <img
                     src={user.photoURL || 'https://i.ibb.co/yWjpDXh/image.png'}
                     alt={user.displayName}
-                    className="h-8 w-8 rounded-full object-cover"
+                    className="h-8 w-8 rounded-full object-cover ring-2 ring-transparent hover:ring-primary/50 transition-all"
                   />
                 </button>
 
@@ -234,17 +240,18 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
             </Button>
           </div>
         </nav>
+      </div>
 
-        {isMenuOpen && (
-          <>
-            {/* Backdrop overlay */}
-            <div 
-              className="fixed inset-0 bg-black/50 z-40 md:hidden"
-              onClick={() => setIsMenuOpen(false)}
-            />
-            
-            {/* Side menu - slides from right */}
-            <div className="fixed top-16 right-0 bottom-0 w-64 bg-card shadow-lg z-41 md:hidden animate-slide-in-right overflow-y-auto">
+      {isMenuOpen && (
+        <>
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          
+          {/* Side menu - slides from right */}
+          <div className="fixed top-16 right-0 bottom-0 w-64 bg-card shadow-lg z-50 md:hidden animate-slide-in-right overflow-y-auto border-l border-border">
               <div className="flex flex-col gap-4 p-4">
                 {navItems.map((item) => (
                   <Link
@@ -279,10 +286,10 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
                         <SearchSuggestions
                           query={searchQuery}
                           onSelect={(suggestion) => {
-                            navigate(`/search/${suggestion}`);
-                            setSearchQuery('');
                             setIsMenuOpen(false);
                             setShowMobileSuggestions(false);
+                            navigate(`/search/${suggestion}`);
+                            setSearchQuery('');
                           }}
                           className="absolute top-full left-0 right-0 z-50 mt-1"
                         />
@@ -309,7 +316,6 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
             </div>
           </>
         )}
-      </div>
     </header>
   );
 }

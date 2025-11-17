@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ShoppingCart, AlertCircle, MapPin, Phone, Shield, Package } from 'lucide-react';
+import { ShoppingCart, AlertCircle, MapPin, Phone, Shield, Package, ArrowLeft } from 'lucide-react';
 import { bookService } from '../services/bookService';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useCartStore } from '@/features/cart/store/cartStore';
@@ -112,9 +112,20 @@ export default function BookDetail() {
 
   return (
     <div className="pt-20 min-h-screen">
-      <div className="container py-8">        {/* Warning for sold books listed more than 12 hours ago */}
+      <div className="container py-8">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="mb-6 -ml-2"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+
+        {/* Warning for sold books listed more than 12 hours ago */}
         {book.availability === 'sold' && book.soldAt && 
-         new Date() - new Date(book.soldAt) > 12 * 60 * 60 * 1000 && (
+         (new Date() - new Date(book.soldAt) > 12 * 60 * 60 * 1000) && (
           <div className="bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
               <AlertCircle className="h-5 w-5" />

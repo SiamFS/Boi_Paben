@@ -17,6 +17,8 @@ export default function Blog() {
   const { data: posts = [], isLoading, error } = useQuery({
     queryKey: ['posts'],
     queryFn: blogService.getAllPosts,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     retry: 3,
     retryDelay: 1000,
     onError: (error) => {
@@ -170,7 +172,9 @@ export default function Blog() {
           </div>
         ) : (
           <div className="grid gap-6">
-            {posts.map((post) => {
+            {posts
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              .map((post) => {
               // Ensure post has required properties with fallbacks
               const postWithDefaults = {
                 _id: post._id,
