@@ -25,25 +25,30 @@ const EditBook = lazy(() => import('@/features/dashboard/pages/EditBook'));
 const Search = lazy(() => import('@/features/books/pages/Search'));
 const PaymentSuccess = lazy(() => import('@/features/cart/pages/PaymentSuccess'));
 
+// Dummy fallback for route changes (not visible)
+const DummyFallback = () => null;
+
 function App() {
   const queryClient = useQueryClient();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Prefetch essential data after initial render
+  // Only show loading screen on initial app load
+  useEffect(() => {
+    // Show loading for at least 500ms to allow React to render
+    const timer = setTimeout(() => setIsInitialLoad(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Prefetch essential data without blocking the UI
   useEffect(() => {
     try {
-      // Prefetch immediately
       prefetchEssentialData(queryClient);
-      // Mark initial load as complete after a brief moment
-      const timer = setTimeout(() => setIsInitialLoad(false), 300);
-      return () => clearTimeout(timer);
     } catch (error) {
       console.error("Error prefetching data:", error);
-      setIsInitialLoad(false);
     }
   }, [queryClient]);
 
-  // Only show loading screen during initial page load
+  // Show loading screen only on initial page load
   if (isInitialLoad) {
     return <LoadingScreen />;
   }
@@ -52,7 +57,8 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <Suspense fallback={<LoadingScreen />}>
+          {/* Use invisible fallback for route changes - don't show loading */}
+          <Suspense fallback={<DummyFallback />}>
             <Routes>
               <Route path="/" element={<Layout />}>
                 <Route index element={<Home />} />
