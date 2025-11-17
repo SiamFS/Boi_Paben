@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
@@ -27,22 +27,26 @@ const PaymentSuccess = lazy(() => import('@/features/cart/pages/PaymentSuccess')
 
 function App() {
   const queryClient = useQueryClient();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Prefetch essential data after initial render with error handling
+  // Prefetch essential data after initial render
   useEffect(() => {
-    // Use a small delay to prioritize rendering the initial UI first
-    const timer = setTimeout(() => {
-      try {
-        // Safe prefetching with error handling
-        prefetchEssentialData(queryClient);
-      } catch (error) {
-        console.error("Error prefetching data:", error);
-        // Continue app execution even if prefetching fails
-      }
-    }, 1500); // Slightly longer delay for more reliable initial rendering
-    
-    return () => clearTimeout(timer);
+    try {
+      // Prefetch immediately
+      prefetchEssentialData(queryClient);
+      // Mark initial load as complete after a brief moment
+      const timer = setTimeout(() => setIsInitialLoad(false), 300);
+      return () => clearTimeout(timer);
+    } catch (error) {
+      console.error("Error prefetching data:", error);
+      setIsInitialLoad(false);
+    }
   }, [queryClient]);
+
+  // Only show loading screen during initial page load
+  if (isInitialLoad) {
+    return <LoadingScreen />;
+  }
 
   return (
     <ThemeProvider>

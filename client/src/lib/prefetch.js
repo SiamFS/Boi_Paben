@@ -6,37 +6,33 @@ import { bookService } from '@/features/books/services/bookService';
  */
 export const prefetchEssentialData = (queryClient) => {
   try {
-    // Check if we already have data in the cache before prefetching
+    // Prefetch latest books - uses dedicated /latest endpoint
     const latestBooksData = queryClient.getQueryData(['latestBooks']);
     if (!latestBooksData) {
-      // Prefetch latest books with low priority
       queryClient.prefetchQuery({
         queryKey: ['latestBooks'],
-        queryFn: () => bookService.getAllBooks({ limit: 10 }),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        retry: false, // Don't retry if it fails on prefetch
+        queryFn: () => bookService.getLatestBooks(10),
+        staleTime: 5 * 60 * 1000,
+        retry: false,
       });
     }
   } catch (error) {
     console.warn('Error prefetching latest books:', error);
-    // Continue with other prefetching
   }
 
   try {
-    // First category's books - only prefetch if not already in cache
-    const firstCategory = 'Fiction'; // First category from bookCategories
-    const categoryBooksData = queryClient.getQueryData(['categoryBooks', firstCategory]);
+    // Prefetch first category - 'Fiction'
+    const categoryBooksData = queryClient.getQueryData(['categoryBooks', 'Fiction']);
     if (!categoryBooksData) {
       queryClient.prefetchQuery({
-        queryKey: ['categoryBooks', firstCategory],
-        queryFn: () => bookService.getBooksByCategory(firstCategory),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        retry: false, // Don't retry if it fails on prefetch
+        queryKey: ['categoryBooks', 'Fiction'],
+        queryFn: () => bookService.getBooksByCategory('Fiction'),
+        staleTime: 5 * 60 * 1000,
+        retry: false,
       });
     }
   } catch (error) {
     console.warn('Error prefetching category books:', error);
-    // Silently continue
   }
 };
 

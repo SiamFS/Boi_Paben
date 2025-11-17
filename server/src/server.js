@@ -17,10 +17,16 @@ import reportRoutes from './routes/reportRoutes.js';
 export const createServer = async () => {
   const app = express();
 
-  await connectDB();
+  // Connect to MongoDB asynchronously without blocking server startup
+  connectDB().catch(err => {
+    console.error('Failed to connect to MongoDB:', err);
+    // Server still starts, but with limited functionality
+  });
   
-  // Start the scheduler for book cleanup
-  startScheduler();
+  // Start scheduler asynchronously without blocking
+  setImmediate(() => {
+    startScheduler();
+  });
   
   const corsOptions = {
     origin: (origin, callback) => {

@@ -92,9 +92,21 @@ export const validateDescription = (description) => {
 // Validate price
 export const validatePrice = (price) => {
   const errors = [];
-  const numPrice = parseFloat(price);
   
-  if (isNaN(numPrice) || numPrice < VALIDATION_LIMITS.PRICE.min) {
+  // Handle null, undefined, or empty string
+  if (price === null || price === undefined || price === '') {
+    errors.push(`Price is required`);
+    return { isValid: false, errors, sanitized: 0 };
+  }
+  
+  const numPrice = parseFloat(String(price).trim());
+  
+  if (isNaN(numPrice)) {
+    errors.push(`Price must be a valid number`);
+    return { isValid: false, errors, sanitized: 0 };
+  }
+  
+  if (numPrice < VALIDATION_LIMITS.PRICE.min) {
     errors.push(`Price must be at least ${VALIDATION_LIMITS.PRICE.min} BDT`);
   }
   

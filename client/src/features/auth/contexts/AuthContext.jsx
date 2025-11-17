@@ -11,7 +11,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth, getDB } from '@/lib/firebase';
 import apiClient from '@/lib/api-client';
 import cache from '@/lib/cache';
 import toast from 'react-hot-toast';
@@ -30,6 +30,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  
   const getAuthToken = async (firebaseUser) => {
     if (!firebaseUser) return null;
     
@@ -41,6 +42,7 @@ export function AuthProvider({ children }) {
     }
 
     try {
+      const db = await getDB();
       const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
       const userData = userDoc.data() || {};
       
@@ -79,6 +81,7 @@ export function AuthProvider({ children }) {
         photoURL: defaultAvatarUrl,
       });
 
+      const db = await getDB();
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         firstName,
         lastName,
@@ -108,6 +111,7 @@ export function AuthProvider({ children }) {
         throw new Error('Please verify your email. A new verification link has been sent.');
       }
 
+      const db = await getDB();
       await setDoc(
         doc(db, 'users', userCredential.user.uid),
         { lastLoginAt: serverTimestamp() },
@@ -128,6 +132,7 @@ export function AuthProvider({ children }) {
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+      const db = await getDB();
       const userDocRef = doc(db, 'users', result.user.uid);
       const userSnapshot = await getDoc(userDocRef);
 
@@ -183,6 +188,7 @@ export function AuthProvider({ children }) {
       if (auth.currentUser) {
         await updateProfile(auth.currentUser, updates);
         
+        const db = await getDB();
         const userDocRef = doc(db, 'users', auth.currentUser.uid);
         await setDoc(userDocRef, updates, { merge: true });
         
@@ -202,6 +208,8 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    let timeoutId;
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser && firebaseUser.emailVerified) {
@@ -219,7 +227,15 @@ export function AuthProvider({ children }) {
       }
     });
 
-    return unsubscribe;
+    // Set a timeout to stop loading after 5 seconds even if auth is still checking
+    timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const value = {

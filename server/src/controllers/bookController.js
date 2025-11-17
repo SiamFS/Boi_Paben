@@ -61,6 +61,16 @@ export const bookController = {
   },
   async uploadBook(req, res) {
     try {
+      console.log('Upload book request received:', {
+        hasEmail: !!req.body.email,
+        hasUser: !!req.user,
+        userEmail: req.user?.email,
+        bodyEmail: req.body.email,
+        hasImageURL: !!req.body.imageURL,
+        bookTitle: req.body.bookTitle,
+        category: req.body.category,
+      });
+
       // Extract email from request body or user context
       const userEmail = req.body.email || req.user?.email;
       
@@ -85,6 +95,7 @@ export const bookController = {
       const validation = validateBookData(req.body);
       
       if (!validation.isValid) {
+        console.error('Book validation errors:', validation.errors);
         return res.status(400).json({
           success: false,
           error: 'Validation failed',
@@ -98,6 +109,7 @@ export const bookController = {
       const bookData = {
         ...validation.sanitizedData,
         email: userEmail,
+        seller: req.body.seller || 'Unknown Seller',
         createdAt: new Date(),
         updatedAt: new Date(),
         availability: 'available'
@@ -115,7 +127,8 @@ export const bookController = {
       console.error('Upload book error:', error);
       res.status(500).json({
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error',
+        message: error.message
       });
     }
   },  async updateBook(req, res) {

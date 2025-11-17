@@ -118,7 +118,17 @@ export default function UploadBook() {
       navigate('/dashboard/manage');
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error(error.response?.data?.message || 'Failed to upload book');
+      
+      // Show validation errors if available
+      if (error.response?.data?.details) {
+        const details = error.response.data.details;
+        const errorMessages = Object.entries(details)
+          .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+          .join('\n');
+        toast.error(`Validation errors:\n${errorMessages}`);
+      } else {
+        toast.error(error.response?.data?.error || error.response?.data?.message || 'Failed to upload book');
+      }
     } finally {
       setLoading(false);
     }

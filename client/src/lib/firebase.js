@@ -1,6 +1,5 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,5 +12,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Lazy load Firestore only when needed
+let db = null;
+export const getDB = async () => {
+  if (!db) {
+    const { getFirestore } = await import('firebase/firestore');
+    db = getFirestore(app);
+  }
+  return db;
+};
+
 export default app;
