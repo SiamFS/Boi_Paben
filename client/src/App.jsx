@@ -55,7 +55,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           {/* Use invisible fallback for route changes - don't show loading */}
           <Suspense fallback={<DummyFallback />}>
             <Routes>
