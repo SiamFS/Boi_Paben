@@ -1,19 +1,15 @@
 import apiClient from '@/lib/api-client';
-import cache from '@/lib/cache';
 
 class RecommendationService {
   constructor() {
-    this.cacheTime = 120; // 2 minutes - shorter for fresher data
+    // Note: Caching is now handled by TanStack Query
   }
-  async getRecommendations(userId = null, limit = 10) {
-    const cacheKey = `recommendations_${userId || 'anonymous'}_${limit}`;
-    
-    // Check cache first
-    const cachedRecommendations = cache.get(cacheKey);
-    if (cachedRecommendations) {
-      return cachedRecommendations;
-    }
 
+  /**
+   * Get personalized recommendations or fallback to latest books
+   * Note: Caching is handled by TanStack Query, not this service
+   */
+  async getRecommendations(userId = null, limit = 10) {
     try {
       const response = await apiClient.get('/api/books/recommendations', {
         params: { userId, limit },
@@ -21,8 +17,6 @@ class RecommendationService {
       });
       
       if (response.data.success) {
-        // Cache the recommendations
-        cache.set(cacheKey, response.data.books, this.cacheTime);
         return response.data.books;
       }
       
@@ -33,15 +27,11 @@ class RecommendationService {
       return await this.getLatestBooks(limit);
     }
   }
-  async getLatestBooks(limit = 10) {
-    const cacheKey = `latest_books_${limit}`;
-    
-    // Check cache first
-    const cachedBooks = cache.get(cacheKey);
-    if (cachedBooks) {
-      return cachedBooks;
-    }
 
+  /**
+   * Get latest books
+   */
+  async getLatestBooks(limit = 10) {
     try {
       const response = await apiClient.get('/api/books/latest', {
         params: { limit },
@@ -49,8 +39,6 @@ class RecommendationService {
       });
       
       if (response.data.success) {
-        // Cache for shorter time since these are latest
-        cache.set(cacheKey, response.data.books, 120); // 2 minutes
         return response.data.books;
       }
       
@@ -58,50 +46,37 @@ class RecommendationService {
     } catch (error) {
       return [];
     }
-  }  async getBannerBooks(limit = 5) {
-    const cacheKey = `banner_books_${limit}`;
-    
-    // Check cache first
-    const cachedBooks = cache.get(cacheKey);
-    if (cachedBooks) {
-      return cachedBooks;
-    }
+  }
 
+  /**
+   * Get banner books (recommended or latest)
+   */
+  async getBannerBooks(limit = 5) {
     try {
       // Try to get recommended books first
       const recommendations = await this.getRecommendations(null, limit);
       
       if (recommendations && recommendations.length >= limit) {
-        const bannerBooks = recommendations.slice(0, limit);
-        cache.set(cacheKey, bannerBooks, this.cacheTime);
-        return bannerBooks;
+        return recommendations.slice(0, limit);
       }
       
       // Fallback to latest books
-      const latestBooks = await this.getLatestBooks(limit);
-      cache.set(cacheKey, latestBooks, this.cacheTime);
-      return latestBooks;
+      return await this.getLatestBooks(limit);
     } catch (error) {
       return [];
     }
   }
 
+  /**
+   * Get books similar to a given book
+   */
   async getSimilarBooks(bookId, limit = 6) {
-    const cacheKey = `similar_books_${bookId}_${limit}`;
-    
-    // Check cache first
-    const cachedBooks = cache.get(cacheKey);
-    if (cachedBooks) {
-      return cachedBooks;
-    }
-
     try {
       const response = await apiClient.get(`/api/books/${bookId}/similar`, {
         params: { limit }
       });
       
       if (response.data.success) {
-        cache.set(cacheKey, response.data.books, this.cacheTime);
         return response.data.books;
       }
       
@@ -111,15 +86,10 @@ class RecommendationService {
     }
   }
 
+  /**
+   * Get personalized recommendations for a specific user
+   */
   async getPersonalizedRecommendations(userId, categories = [], limit = 10) {
-    const cacheKey = `personalized_${userId}_${categories.join('-')}_${limit}`;
-    
-    // Check cache first
-    const cachedBooks = cache.get(cacheKey);
-    if (cachedBooks) {
-      return cachedBooks;
-    }
-
     try {
       const response = await apiClient.post('/api/books/personalized', {
         userId,
@@ -128,7 +98,6 @@ class RecommendationService {
       });
       
       if (response.data.success) {
-        cache.set(cacheKey, response.data.books, this.cacheTime);
         return response.data.books;
       }
       
@@ -138,9 +107,13 @@ class RecommendationService {
     }
   }
 
+  /**
+   * Clear all cache (handled by TanStack Query, kept for backward compatibility)
+   */
   clearCache() {
-    // Clear all recommendation-related cache
-    cache.clear();
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✓ Cache cleared (handled by TanStack Query)');
+    }
   }
 }
 

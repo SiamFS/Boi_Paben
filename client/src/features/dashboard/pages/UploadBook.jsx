@@ -69,6 +69,13 @@ export default function UploadBook() {
       return;
     }
 
+    // Validate user session
+    if (!user || !user.email) {
+      toast.error('Session expired. Please login again.');
+      navigate('/login');
+      return;
+    }
+
     // Validate image file
     const imageErrors = validateImageFile(imageFile);
     if (imageErrors.length > 0) {
@@ -115,17 +122,13 @@ export default function UploadBook() {
       queryClient.invalidateQueries({ queryKey: ['categoryBooks'] });
       queryClient.invalidateQueries({ queryKey: ['shopBooks'] }); // Invalidate shop page
       
-      // Clear localStorage cache for book lists
-      cache.delete('/api/books/latest');
-      cache.delete('/api/books/all');
-      
-      // Cache the address for next upload
+      // Cache the address for next upload (UX convenience)
       cache.set(CACHED_ADDRESS_KEY, {
         streetAddress: data.streetAddress,
         cityTown: data.cityTown,
         district: data.district,
         zipCode: data.zipCode,
-      }, 30 * 24 * 60 * 60); // Cache for 30 days
+      });
       
       toast.success('Book uploaded successfully!');
       navigate('/dashboard/manage');

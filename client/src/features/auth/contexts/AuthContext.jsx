@@ -13,7 +13,6 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, getDB } from '@/lib/firebase';
 import apiClient from '@/lib/api-client';
-import cache from '@/lib/cache';
 import toast from 'react-hot-toast';
 
 export const AuthContext = createContext();
@@ -26,25 +25,9 @@ export function AuthProvider({ children }) {
   const getAuthToken = async (firebaseUser) => {
     if (!firebaseUser) return null;
     
-    // Check cache first for faster authentication
-    const cacheKey = `auth_${firebaseUser.uid}`;
-    const cachedUser = cache.get(cacheKey);
-    if (cachedUser) {
-      return cachedUser;
-    }
-
-    // Also check Firestore user doc cache
-    const firestoreCacheKey = `firestore_user_${firebaseUser.uid}`;
-    let userData = cache.get(firestoreCacheKey);
-
     try {
-      // Only fetch from Firestore if not cached
-      if (!userData) {
-        const db = await getDB();
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        userData = userDoc.data() || {};
-        // Cache Firestore data for 24 hours
-        cache.set(firestoreCacheKey, userData, 86400);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔐 Calling verify-firebase endpoint...');
       }
       
       const response = await apiClient.post('/api/auth/verify-firebase', {
@@ -53,21 +36,23 @@ export function AuthProvider({ children }) {
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
+          firstName: '',
+          lastName: '',
         },
       });
 
-      if (response.data.success) {
+      if (response.data.success && response.data.token) {
         localStorage.setItem('auth_token', response.data.token);
-        // Cache user data for 1 hour (3600 seconds)
-        cache.set(cacheKey, response.data.user, 3600);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('✓ Token stored successfully after verify-firebase call');
+        }
         return response.data.user;
+      } else {
+        throw new Error('verify-firebase response missing token or success flag');
       }
     } catch (error) {
-      // Return cached data as fallback if available
-      if (cachedUser) {
-        return cachedUser;
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('getAuthToken error:', error);
       }
       throw error;
     }
@@ -106,6 +91,9 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔐 Starting email/password login for:', email);
+      }
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
       if (!userCredential.user.emailVerified) {
@@ -121,18 +109,30 @@ export function AuthProvider({ children }) {
         { merge: true }
       );
 
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔐 Firebase login successful, calling getAuthToken...');
+      }
       const userData = await getAuthToken(userCredential.user);
       setUser(userData);
       
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔐 Login complete. User set:', userData?.email);
+      }
       toast.success('Welcome back!');
       return { success: true, user: userData };
     } catch (error) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('🔐 Login error:', error);
+      }
       throw error;
     }
   };
 
   const signInWithGoogle = async () => {
     try {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔐 Starting Google sign-in...');
+      }
       const result = await signInWithPopup(auth, googleProvider);
       const db = await getDB();
       const userDocRef = doc(db, 'users', result.user.uid);
@@ -149,16 +149,28 @@ export function AuthProvider({ children }) {
           lastLoginAt: serverTimestamp(),
           role: 'user',
         });
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('🔐 New Google user created:', result.user.email);
+        }
       } else {
         await setDoc(userDocRef, { lastLoginAt: serverTimestamp() }, { merge: true });
       }
 
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔐 Google login successful, calling getAuthToken...');
+      }
       const userData = await getAuthToken(result.user);
       setUser(userData);
       
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔐 Google login complete. User set:', userData?.email);
+      }
       toast.success('Welcome!');
       return { success: true, user: userData };
     } catch (error) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('🔐 Google login error:', error);
+      }
       throw error;
     }
   };
@@ -190,10 +202,6 @@ export function AuthProvider({ children }) {
         const db = await getDB();
         const userDocRef = doc(db, 'users', auth.currentUser.uid);
         await setDoc(userDocRef, updates, { merge: true });
-        
-        // Clear cache to force refresh
-        const cacheKey = `auth_${auth.currentUser.uid}`;
-        cache.delete(cacheKey);
         
         const userData = await getAuthToken(auth.currentUser);
         setUser(userData);
@@ -246,5 +254,5 @@ export function AuthProvider({ children }) {
     updateUserProfile,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

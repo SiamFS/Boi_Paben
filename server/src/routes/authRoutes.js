@@ -37,6 +37,9 @@ router.post('/verify-firebase', asyncHandler(async (req, res) => {
       
       await usersCollection.insertOne(newUser);
       dbUser = newUser;
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✓ New user created:', user.email);
+      }
     }
     
     const tokenPayload = {
@@ -54,6 +57,10 @@ router.post('/verify-firebase', asyncHandler(async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRE || '7d' }
     );
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✓ JWT token generated for user:', user.email, 'Expires in:', process.env.JWT_EXPIRE || '7d');
+    }
 
     res.json({
       success: true,

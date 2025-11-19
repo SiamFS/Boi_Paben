@@ -1,139 +1,85 @@
-// Cache system with localStorage persistence and time limits for BoiPaben
-const CACHE_VERSION = '1.0.0';
+/**
+ * Minimal Cache System - Only for non-API data (e.g., form inputs)
+ * 
+ * IMPORTANT: Use TanStack Query for API responses, NOT this cache!
+ * This cache is ONLY for user preferences, form data, and temporary UI state.
+ * 
+ * API caching should be handled by:
+ * - TanStack Query (React Query) with staleTime and cacheTime
+ * - HTTP headers (Cache-Control, ETag)
+ * - Backend response caching
+ */
 
-class Cache {
+class MinimalCache {
   constructor() {
-    this.cache = new Map();
-    this.timers = new Map();
-    this.loadFromLocalStorage();
+    this.store = new Map();
   }
 
-  loadFromLocalStorage() {
-    try {
-      // Check version and clear old cache
-      const storedVersion = localStorage.getItem('cache_version');
-      if (storedVersion !== CACHE_VERSION) {
-        localStorage.removeItem('app_cache');
-        localStorage.setItem('cache_version', CACHE_VERSION);
-        return;
-      }
-
-      const stored = localStorage.getItem('app_cache');
-      if (stored) {
-        const data = JSON.parse(stored);
-        const now = Date.now();
-        
-        // Load non-expired items
-        Object.entries(data).forEach(([key, item]) => {
-          if (item.expiresAt > now) {
-            this.cache.set(key, item.value);
-            // Set timer for remaining time
-            const remainingTtl = Math.floor((item.expiresAt - now) / 1000);
-            this.setTimer(key, remainingTtl);
-          }
-        });
-      }
-    } catch (error) {
-      // Continue with empty cache if loading fails
+  /**
+   * Store a value in memory
+   * @param {string} key - Cache key
+   * @param {*} value - Value to cache
+   * @returns {*} The stored value
+   */
+  set(key, value) {
+    this.store.set(key, value);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`✓ Cached: ${key}`);
     }
-  }
-
-  saveToLocalStorage() {
-    try {
-      const data = {};
-      const now = Date.now();
-      
-      this.cache.forEach((value, key) => {
-        // Calculate expiration time from timer
-        const timer = this.timers.get(key);
-        if (timer) {
-          data[key] = {
-            value,
-            expiresAt: now + (timer._idleTimeout || 3600000) // Default 1 hour if no timer
-          };
-        }
-      });
-      
-      localStorage.setItem('app_cache', JSON.stringify(data));
-    } catch (error) {
-      // Continue if save fails
-    }
-  }
-
-  setTimer(key, ttlSeconds) {
-    const timer = setTimeout(() => {
-      this.cache.delete(key);
-      this.timers.delete(key);
-      this.saveToLocalStorage();
-    }, ttlSeconds * 1000);
-    
-    this.timers.set(key, timer);
-  }
-
-  set(key, value, ttlSeconds = 3600) {
-    // Clear existing timer if any
-    if (this.timers.has(key)) {
-      clearTimeout(this.timers.get(key));
-    }
-
-    // Set value
-    this.cache.set(key, value);
-
-    // Set expiration timer
-    this.setTimer(key, ttlSeconds);
-    
-    // Persist to localStorage
-    this.saveToLocalStorage();
-    
     return value;
   }
 
+  /**
+   * Retrieve a value from cache
+   * @param {string} key - Cache key
+   * @returns {*} Cached value or null
+   */
   get(key) {
-    return this.cache.get(key) || null;
+    return this.store.get(key) || null;
   }
 
+  /**
+   * Check if key exists
+   * @param {string} key - Cache key
+   * @returns {boolean}
+   */
   has(key) {
-    return this.cache.has(key);
+    return this.store.has(key);
   }
 
+  /**
+   * Delete a specific key
+   * @param {string} key - Cache key
+   * @returns {boolean}
+   */
   delete(key) {
-    if (this.timers.has(key)) {
-      clearTimeout(this.timers.get(key));
-      this.timers.delete(key);
+    const result = this.store.delete(key);
+    if (result && process.env.NODE_ENV !== 'production') {
+      console.log(`✓ Deleted cache: ${key}`);
     }
-    const result = this.cache.delete(key);
-    this.saveToLocalStorage();
     return result;
   }
 
+  /**
+   * Clear all cache
+   */
   clear() {
-    // Clear all timers
-    for (const timer of this.timers.values()) {
-      clearTimeout(timer);
+    this.store.clear();
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✓ Cache cleared');
     }
-    this.timers.clear();
-    this.cache.clear();
-    localStorage.removeItem('app_cache');
   }
 
+  /**
+   * Get current cache size
+   * @returns {number}
+   */
   size() {
-    return this.cache.size;
-  }
-
-  // Get all keys with their expiration times
-  getInfo() {
-    const info = {};
-    for (const key of this.cache.keys()) {
-      info[key] = {
-        hasValue: true,
-        hasTimer: this.timers.has(key)
-      };
-    }
-    return info;
+    return this.store.size;
   }
 }
 
 // Create singleton instance
-const cache = new Cache();
+const cache = new MinimalCache();
 
 export default cache;

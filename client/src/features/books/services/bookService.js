@@ -11,11 +11,6 @@ export const bookService = {
       // Handle both array and object response formats
       return response.data.books || response.data;
     } catch (error) {
-      // Try to get from cache as fallback
-      const cachedBooks = cache.get(`/api/books/latest`);
-      if (cachedBooks) {
-        return cachedBooks.books || cachedBooks;
-      }
       throw error;
     }
   },
@@ -25,7 +20,6 @@ export const bookService = {
       const response = await apiClient.get('/api/books/all', { 
         params,
         priority: params.priority || 'low', // Default to low priority for bulk data
-        cache: false // Disable cache for proper sorting/filtering
       });
       return response.data;
     } catch (error) {
@@ -37,7 +31,6 @@ export const bookService = {
     try {
       const response = await apiClient.get(`/api/books/${id}`, {
         priority: 'high', // High priority for individual book details
-        cache: false // Don't cache individual book details for fresh data
       });
       return response.data;
     } catch (error) {
@@ -63,11 +56,6 @@ export const bookService = {
       });
       return response.data;
     } catch (error) {
-      // Try to get from cache as fallback
-      const cachedBooks = cache.get(`/api/books/category/${category}`);
-      if (cachedBooks) {
-        return cachedBooks;
-      }
       throw error;
     }
   },
@@ -76,21 +64,18 @@ export const bookService = {
     try {
       const response = await apiClient.get(`/api/books/user/${email}`, {
         priority: 'normal', // Normal priority for user's books
-        cache: false // Don't cache dashboard data
       });
       return response.data;
     } catch (error) {
       throw error;
     }
   },
+
   async uploadBook(bookData) {
     try {
       const response = await apiClient.post('/api/books/upload', bookData);
-      // Clear all book list caches after upload
-      cache.delete('/api/books/latest');
-      cache.delete('/api/books/all');
-      cache.delete(`/api/books/category/${bookData.category}`);
-      cache.delete(`/api/books/user/${bookData.email}`);
+      // Note: Cache invalidation is now handled by TanStack Query
+      // Only keep address caching for UX
       return response.data;
     } catch (error) {
       throw error;
@@ -105,25 +90,13 @@ export const bookService = {
     };
     
     const response = await apiClient.patch(`/api/books/${id}`, sanitizedData);
-    // Clear all book caches after update including the specific book
-    cache.delete('/api/books/latest');
-    cache.delete('/api/books/all');
-    cache.delete(`/api/books/${id}`); // Clear this specific book's cache
-    if (bookData.category) {
-      cache.delete(`/api/books/category/${bookData.category}`);
-    }
-    if (bookData.email || bookData.userEmail) {
-      const email = bookData.email || bookData.userEmail;
-      cache.delete(`/api/books/user/${email}`);
-    }
+    // Note: Cache invalidation is now handled by TanStack Query
     return response.data;
   },
 
   async deleteBook(id) {
     const response = await apiClient.delete(`/api/books/${id}`);
-    // Clear all book list caches after delete
-    cache.delete('/api/books/latest');
-    cache.delete('/api/books/all');
+    // Note: Cache invalidation is now handled by TanStack Query
     return response.data;
   },
 
@@ -131,6 +104,7 @@ export const bookService = {
     const response = await apiClient.post('/api/reports', reportData);
     return response.data;
   },
+
   async uploadImage(file) {
     try {
       const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
