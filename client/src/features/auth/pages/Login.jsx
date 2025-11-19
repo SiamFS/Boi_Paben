@@ -46,7 +46,6 @@ export default function Login() {
       await signInWithGoogle();
       navigate(from, { replace: true });
     } catch (error) {
-      console.error('Google sign-in error:', error);
       toast.error(error.message || 'Google sign-in failed');
     } finally {
       setLoading(false);

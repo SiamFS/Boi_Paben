@@ -1,4 +1,6 @@
 // Cache system with localStorage persistence and time limits for BoiPaben
+const CACHE_VERSION = '1.0.0';
+
 class Cache {
   constructor() {
     this.cache = new Map();
@@ -8,6 +10,14 @@ class Cache {
 
   loadFromLocalStorage() {
     try {
+      // Check version and clear old cache
+      const storedVersion = localStorage.getItem('cache_version');
+      if (storedVersion !== CACHE_VERSION) {
+        localStorage.removeItem('app_cache');
+        localStorage.setItem('cache_version', CACHE_VERSION);
+        return;
+      }
+
       const stored = localStorage.getItem('app_cache');
       if (stored) {
         const data = JSON.parse(stored);
@@ -24,7 +34,7 @@ class Cache {
         });
       }
     } catch (error) {
-      console.error('Error loading cache from localStorage:', error);
+      // Continue with empty cache if loading fails
     }
   }
 
@@ -46,7 +56,7 @@ class Cache {
       
       localStorage.setItem('app_cache', JSON.stringify(data));
     } catch (error) {
-      console.error('Error saving cache to localStorage:', error);
+      // Continue if save fails
     }
   }
 

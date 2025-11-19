@@ -12,10 +12,6 @@ const API_URL = isLocalhost
   ? import.meta.env.VITE_API_URL_LOCAL || 'http://localhost:5000'
   : import.meta.env.VITE_API_URL_PRODUCTION || 'https://boi-paben-backend.onrender.com';
 
-console.log(`Running on: ${window.location.hostname}`);
-console.log(`Using API URL: ${API_URL}`);
-console.log(`Mode: ${import.meta.env.MODE}`);
-
 // Track if we've shown backend error message in this session (show only once)
 let hasShownBackendError = false;
 let firstRequestTime = null;
@@ -24,12 +20,12 @@ const isProduction = !isLocalhost && !isDevelopment;
 
 // Cache configuration: which endpoints to cache and for how long (in seconds)
 const CACHE_CONFIG = {
-  '/api/books/all': 3600, // 1 hour
-  '/api/books/latest': 3600, // 1 hour
-  '/api/books/category': 3600, // 1 hour
-  '/api/books/user': 1800, // 30 minutes
-  '/api/blog/posts': 3600, // 1 hour
-  '/api/blog/reactions': 1800, // 30 minutes
+  '/api/books/all': 120, // 2 minutes - fresher data
+  '/api/books/latest': 120, // 2 minutes - fresher data
+  '/api/books/category': 120, // 2 minutes - fresher data
+  '/api/books/user': 120, // 2 minutes - fresher data
+  '/api/blog/posts': 120, // 2 minutes - fresher data
+  '/api/blog/reactions': 120, // 2 minutes - fresher data
 };
 
 // Create axios instance with default config

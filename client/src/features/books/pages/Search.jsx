@@ -38,7 +38,6 @@ export default function Search() {
           setCategories(response.data.categories);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
         // Set empty array as fallback
         setCategories([]);
       }
@@ -64,7 +63,6 @@ export default function Search() {
       const results = response.data?.books || response.data || [];
       setSearchResults(results);
     } catch (error) {
-      console.error('Search error:', error);
       setSearchResults([]);
     } finally {
       setLoading(false);

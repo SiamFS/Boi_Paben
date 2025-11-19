@@ -90,7 +90,6 @@ export default function Cart() {
         throw new Error(result.error.message);
       }
     } catch (error) {
-      console.error('Payment error:', error);
       toast.error('Payment failed. Please try again.');
     } finally {
       setLoading(false);
@@ -119,7 +118,6 @@ export default function Cart() {
         }, 2000);
       }
     } catch (error) {
-      console.error('COD error:', error);
       toast.error('Failed to place order. Please try again.');
     } finally {
       setLoading(false);

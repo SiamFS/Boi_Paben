@@ -51,44 +51,47 @@ export const BookGridSkeleton = ({ count = 8, listView = false }) => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="card flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-5 h-full"
+            className="relative group"
           >
-            {/* Mobile layout */}
-            <div className="flex gap-3 sm:contents">
-              <SkeletonLoader className="w-20 h-28 sm:w-24 sm:h-32 rounded-xl flex-shrink-0" />
-              <div className="flex-grow flex flex-col justify-between min-w-0">
+            <div className="card flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-5 h-full overflow-hidden bg-gradient-to-r from-card/50 to-card border border-border/50">
+              <div className="flex gap-3 sm:contents">
+                <div className="w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 bg-muted/50 rounded-xl">
+                  <div className="w-full h-full bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60 animate-pulse rounded-xl" />
+                </div>
+
+                <div className="flex-grow flex flex-col justify-between min-w-0">
+                  <div className="flex-grow space-y-1.5 sm:space-y-2">
+                    <div className="h-4 sm:h-5 bg-muted/60 rounded animate-pulse w-full" />
+                    <div className="h-4 sm:h-5 bg-muted/60 rounded animate-pulse w-3/4" />
+                    <div className="h-3 sm:h-4 bg-muted/60 rounded animate-pulse w-2/3" />
+                    <div className="h-5 bg-muted/60 rounded-full animate-pulse w-20" />
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-2 sm:hidden">
+                    <div className="h-5 bg-muted/60 rounded animate-pulse w-24" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="hidden sm:flex sm:flex-col sm:justify-between sm:min-w-0 sm:flex-grow">
                 <div className="flex-grow space-y-2">
-                  <SkeletonLoader className="h-5 sm:h-6 w-full" />
-                  <SkeletonLoader className="h-3 sm:h-4 w-3/4" />
-                  <SkeletonLoader className="h-5 w-20" />
+                  <div className="h-4 bg-muted/60 rounded animate-pulse w-full" />
+                  <div className="h-4 bg-muted/60 rounded animate-pulse w-5/6" />
                 </div>
-                {/* Mobile price */}
-                <div className="flex items-center justify-between mt-2 sm:hidden">
-                  <SkeletonLoader className="h-6 w-20" />
-                  <SkeletonLoader className="h-4 w-16" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Desktop layout (hidden on mobile) */}
-            <div className="hidden sm:flex sm:flex-col sm:justify-between sm:min-w-0 sm:flex-grow">
-              <div className="flex-grow space-y-3">
-                <SkeletonLoader className="h-4 w-full" />
-                <SkeletonLoader className="h-4 w-2/3" />
-              </div>
-              <div className="flex items-center justify-between mt-4 pt-3">
-                <SkeletonLoader className="h-8 w-24" />
-                <div className="flex gap-2">
-                  <SkeletonLoader className="h-9 w-20" />
-                  <SkeletonLoader className="h-9 w-16" />
+                
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
+                  <div className="h-7 bg-muted/60 rounded animate-pulse w-24" />
+                  <div className="flex gap-2">
+                    <div className="h-9 bg-muted/60 rounded animate-pulse w-20" />
+                    <div className="h-9 bg-muted/60 rounded animate-pulse w-16" />
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Mobile action buttons */}
-            <div className="flex gap-2 sm:hidden">
-              <SkeletonLoader className="h-8 flex-1" />
-              <SkeletonLoader className="h-8 flex-1" />
+
+              <div className="flex gap-2 sm:hidden">
+                <div className="flex-1 h-8 bg-muted/60 rounded animate-pulse" />
+                <div className="flex-1 h-8 bg-muted/60 rounded animate-pulse" />
+              </div>
             </div>
           </motion.div>
         ))}
@@ -103,99 +106,36 @@ export const BookGridSkeleton = ({ count = 8, listView = false }) => {
           initial={{ opacity: 0.6, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="card h-full flex flex-col overflow-hidden"
+          className="relative h-full flex flex-col overflow-hidden bg-gradient-to-br from-card via-card to-card/80 border border-border/50 rounded-xl shadow-sm"
         >
-          <div className="relative bg-muted rounded-t-xl overflow-hidden">
-            <div className="aspect-[3/4] w-full animate-pulse bg-muted" />
+          {/* Image Container */}
+          <div className="relative aspect-[3/4] overflow-hidden bg-muted/30 rounded-t-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60 animate-pulse" />
           </div>
-          <div className="p-3 sm:p-4 flex-grow flex flex-col space-y-2 sm:space-y-3">
-            <div className="flex-grow space-y-1 sm:space-y-2">
-              <div className="h-4 sm:h-5 w-full bg-muted rounded animate-pulse" />
-              <div className="h-4 sm:h-5 w-4/5 bg-muted rounded animate-pulse" />
-              <div className="h-3 sm:h-4 w-3/4 bg-muted rounded animate-pulse" />
-              <div className="h-3 sm:h-4 w-16 bg-muted rounded animate-pulse" />
-            </div>
-            <div className="mt-auto space-y-2 pt-2 sm:pt-3 border-t border-border/30">
-              <div className="flex justify-between items-center">
-                <div className="h-5 sm:h-6 w-16 sm:w-20 bg-muted rounded animate-pulse" />
-                <div className="h-6 sm:h-8 w-6 sm:w-8 bg-muted rounded-lg animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
-};
-
-// Enhanced loading skeleton with modern animations
-export const EnhancedBookGridSkeleton = ({ count = 8, listView = false }) => {
-  if (listView) {
-    return (
-      <div className="space-y-4">
-        {Array.from({ length: count }, (_, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="card flex gap-4 p-5 relative overflow-hidden"
-          >
-            {/* Shimmer overlay */}
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
-            
-            <div className="relative">
-              <SkeletonLoader className="w-24 h-32 rounded-xl" />
-            </div>
-            <div className="flex-grow flex flex-col justify-between min-w-0">
-              <div className="flex-grow space-y-3">
-                <SkeletonLoader className="h-6 w-full" />
-                <SkeletonLoader className="h-4 w-3/4" />
-                <SkeletonLoader className="h-6 w-20" />
-                <SkeletonLoader className="h-4 w-full" />
-                <SkeletonLoader className="h-4 w-2/3" />
-              </div>
-              <div className="flex items-center justify-between mt-4 pt-3">
-                <SkeletonLoader className="h-8 w-24" />
-                <div className="flex gap-2">
-                  <SkeletonLoader className="h-9 w-20" />
-                  <SkeletonLoader className="h-9 w-16" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-      {Array.from({ length: count }, (_, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="card h-full flex flex-col overflow-hidden relative"
-        >
-          {/* Shimmer overlay */}
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
           
-          <div className="relative">
-            <SkeletonLoader className="aspect-[3/4] rounded-t-xl" />
-          </div>
-          <div className="p-4 flex-grow flex flex-col space-y-3 relative">
-            <div className="flex-grow space-y-2">
-              <SkeletonLoader className="h-5 w-full" />
-              <SkeletonLoader className="h-5 w-4/5" />
-              <SkeletonLoader className="h-4 w-3/4" />
-              <SkeletonLoader className="h-4 w-16" />
+          {/* Content Container */}
+          <div className="p-3 sm:p-4 flex-grow flex flex-col bg-gradient-to-b from-card to-card/50">
+            <div className="flex-grow space-y-1 sm:space-y-2">
+              {/* Title - 2 lines */}
+              <div className="space-y-1.5">
+                <div className="h-4 sm:h-5 bg-muted/60 rounded animate-pulse w-full" />
+                <div className="h-4 sm:h-5 bg-muted/60 rounded animate-pulse w-4/5" />
+              </div>
+              {/* Author */}
+              <div className="h-3 sm:h-4 bg-muted/60 rounded animate-pulse w-3/5 mt-1" />
+              {/* Category badge */}
+              <div className="inline-block mt-1">
+                <div className="h-5 sm:h-6 bg-muted/60 rounded-full animate-pulse w-20" />
+              </div>
             </div>
-            <div className="mt-auto space-y-2 pt-3 border-t border-border/30">
-              <div className="flex justify-between items-center">
-                <SkeletonLoader className="h-6 w-20" />
-                <SkeletonLoader className="h-8 w-8" />
+            
+            {/* Bottom section */}
+            <div className="mt-auto space-y-2 sm:space-y-3 pt-2 sm:pt-3 border-t border-border/30">
+              <div className="flex items-center justify-between">
+                {/* Price */}
+                <div className="h-5 sm:h-6 bg-muted/60 rounded animate-pulse w-24" />
+                {/* Cart button */}
+                <div className="h-8 sm:h-10 w-8 sm:w-10 bg-muted/60 rounded animate-pulse" />
               </div>
             </div>
           </div>
@@ -204,24 +144,6 @@ export const EnhancedBookGridSkeleton = ({ count = 8, listView = false }) => {
     </div>
   );
 };
-
-// Page loading skeleton
-export const PageLoadingSkeleton = ({ title = "Loading..." }) => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center space-y-4">
-      <PulseAnimation>
-        <BookOpen className="h-16 w-16 text-primary mx-auto" />
-      </PulseAnimation>
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        <div className="flex items-center justify-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-muted-foreground">Please wait...</span>
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 // Content loading skeleton
 export const ContentLoadingSkeleton = () => (
@@ -449,15 +371,6 @@ PulseAnimation.propTypes = {
 BookGridSkeleton.propTypes = {
   count: PropTypes.number,
   listView: PropTypes.bool,
-};
-
-EnhancedBookGridSkeleton.propTypes = {
-  count: PropTypes.number,
-  listView: PropTypes.bool,
-};
-
-PageLoadingSkeleton.propTypes = {
-  title: PropTypes.string,
 };
 
 TableLoadingSkeleton.propTypes = {

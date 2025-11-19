@@ -22,7 +22,6 @@ export default function Blog() {
     retry: 3,
     retryDelay: 1000,
     onError: (error) => {
-      console.error('Failed to fetch posts:', error);
       toast.error('Failed to load blog posts');
     },
   });
@@ -35,7 +34,6 @@ export default function Blog() {
       toast.success('Post created successfully');
     },
     onError: (error) => {
-      console.error('Failed to create post:', error);
       toast.error('Failed to create post');
     },
   });
@@ -48,7 +46,6 @@ export default function Blog() {
       toast.success('Post updated successfully');
     },
     onError: (error) => {
-      console.error('Failed to update post:', error);
       toast.error('Failed to update post');
     },
   });
@@ -60,7 +57,6 @@ export default function Blog() {
       toast.success('Post deleted successfully');
     },
     onError: (error) => {
-      console.error('Failed to delete post:', error);
       toast.error('Failed to delete post');
     },
   });

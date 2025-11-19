@@ -12,11 +12,11 @@ warmupBackend();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 2 * 60 * 1000, // 2 minutes - shorter for fresher data
       gcTime: 30 * 60 * 1000, // 30 minutes (replaces deprecated cacheTime)
       retry: 1,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      refetchOnWindowFocus: true, // Refresh when user returns to tab
+      refetchOnMount: true, // Always fetch fresh data on mount
       refetchOnReconnect: 'always',
     },
   },

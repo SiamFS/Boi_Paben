@@ -32,7 +32,6 @@ export function formatDate(date) {
       day: 'numeric',
     }).format(dateObj);
   } catch (error) {
-    console.error('Error formatting date:', error, 'with value:', date);
     return 'Invalid date';
   }
 }

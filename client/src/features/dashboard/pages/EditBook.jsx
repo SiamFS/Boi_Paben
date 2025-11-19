@@ -109,14 +109,16 @@ export default function EditBook() {
 
       await bookService.updateBook(id, bookData);
       
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries(['book', id]);
-      queryClient.invalidateQueries(['userBooks']);
+      // Invalidate all book-related queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['book', id] });
+      queryClient.invalidateQueries({ queryKey: ['userBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+      queryClient.invalidateQueries({ queryKey: ['latestBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryBooks'] });
       
       toast.success('Book updated successfully!');
       navigate('/dashboard/manage');
     } catch (error) {
-      console.error('Update error:', error);
       toast.error('Failed to update book');
     } finally {
       setLoading(false);

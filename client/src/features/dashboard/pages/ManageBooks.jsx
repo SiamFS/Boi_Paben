@@ -30,10 +30,12 @@ export default function ManageBooks() {
   const deleteBookMutation = useMutation({
     mutationFn: bookService.deleteBook,
     onSuccess: () => {
-      queryClient.invalidateQueries(['userBooks']);
+      // Invalidate all book-related queries
+      queryClient.invalidateQueries({ queryKey: ['userBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+      queryClient.invalidateQueries({ queryKey: ['latestBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryBooks'] });
       toast.success('Book deleted successfully');
-      // Reload the page to refresh the list
-      refetch();
     },
     onError: (error) => {
       const message = error?.message || 'Failed to delete book';

@@ -53,7 +53,6 @@ export default function SearchSuggestions({
           setSuggestions(response.data.suggestions);
         }
       } catch (error) {
-        console.error('Error fetching suggestions:', error);
         setSuggestions([]);
       } finally {
         setLoading(false);

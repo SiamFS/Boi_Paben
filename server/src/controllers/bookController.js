@@ -95,7 +95,6 @@ export const bookController = {
       const validation = validateBookData(req.body);
       
       if (!validation.isValid) {
-        console.error('Book validation errors:', validation.errors);
         return res.status(400).json({
           success: false,
           error: 'Validation failed',

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { bookService } from '@/features/books/services/bookService';
@@ -21,6 +22,7 @@ const CACHED_ADDRESS_KEY = 'lastUsedAddress';
 export default function UploadBook() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [useAutoFill, setUseAutoFill] = useState(false);
@@ -106,6 +108,16 @@ export default function UploadBook() {
 
       await bookService.uploadBook(bookData);
       
+      // Invalidate all book-related queries to fetch fresh data
+      queryClient.invalidateQueries({ queryKey: ['userBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+      queryClient.invalidateQueries({ queryKey: ['latestBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['categoryBooks'] });
+      
+      // Clear localStorage cache for book lists
+      cache.delete('/api/books/latest');
+      cache.delete('/api/books/all');
+      
       // Cache the address for next upload
       cache.set(CACHED_ADDRESS_KEY, {
         streetAddress: data.streetAddress,
@@ -117,8 +129,6 @@ export default function UploadBook() {
       toast.success('Book uploaded successfully!');
       navigate('/dashboard/manage');
     } catch (error) {
-      console.error('Upload error:', error);
-      
       // Show validation errors if available
       if (error.response?.data?.details) {
         const details = error.response.data.details;

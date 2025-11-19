@@ -3,9 +3,11 @@ import { getCollection } from '../config/database.js';
 
 export const startScheduler = () => {
   // Run every hour to clean up old sold books from public view
-  cron.schedule('0 * * * *', async () => {
+  cron.schedule('0 */12 * * *', async () => {
     try {
-      console.log('Running scheduled cleanup of old sold books...');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Running scheduled cleanup of old sold books...');
+      }
       
       const bookCollection = getCollection('books');
       const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
@@ -23,12 +25,16 @@ export const startScheduler = () => {
       );
       
       if (result.modifiedCount > 0) {
-        console.log(`Hidden ${result.modifiedCount} old sold books from public view`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`Hidden ${result.modifiedCount} old sold books from public view`);
+        }
       }
     } catch (error) {
       console.error('Error in scheduled cleanup:', error);
     }
   });
   
-  console.log('Book cleanup scheduler started');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Book cleanup scheduler started');
+  }
 };

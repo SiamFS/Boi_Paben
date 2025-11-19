@@ -82,7 +82,7 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
         await updateUserProfile({ photoURL: data.data.url });
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      // Image upload failed silently
     }
   };
 

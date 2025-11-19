@@ -62,21 +62,18 @@ export default function Footer() {
               <button
                 className="text-gray-400 hover:text-white transition-colors"
                 aria-label="Facebook"
-                onClick={() => console.log('Facebook link clicked')}
               >
                 <Facebook className="h-5 w-5" />
               </button>
               <button
                 className="text-gray-400 hover:text-white transition-colors"
                 aria-label="Instagram"
-                onClick={() => console.log('Instagram link clicked')}
               >
                 <Instagram className="h-5 w-5" />
               </button>
               <button
                 className="text-gray-400 hover:text-white transition-colors"
                 aria-label="Twitter"
-                onClick={() => console.log('Twitter link clicked')}
               >
                 <Twitter className="h-5 w-5" />
               </button>

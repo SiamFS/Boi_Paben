@@ -38,7 +38,6 @@ export default function PaymentSuccess() {
             toast.error('There was an issue processing your payment. Please contact support.');
           }
         } catch (error) {
-          console.error('Error completing payment:', error);
           toast.error('Payment completed but there was an issue. Please contact support if needed.');
           // Still clear cart as payment might have succeeded
           await clearCart();

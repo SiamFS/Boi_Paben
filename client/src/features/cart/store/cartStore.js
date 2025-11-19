@@ -12,7 +12,6 @@ const fetchCartAPI = async () => {
     const response = await apiClient.get('/api/cart');
     return response.data;
   } catch (error) {
-    console.error('Error fetching cart:', error);
     throw error;
   }
 };
@@ -81,7 +80,7 @@ export const useCartStore = create(
           await apiClient.delete('/api/cart');
           set({ items: [] });
         } catch (error) {
-          console.error('Error clearing cart:', error);
+          // Continue silently on clear failure
         }
       },
 

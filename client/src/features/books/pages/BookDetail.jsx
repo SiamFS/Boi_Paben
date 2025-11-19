@@ -112,7 +112,7 @@ export default function BookDetail() {
 
   return (
     <div className="pt-20 min-h-screen">
-      <div className="container py-8">
+      <div className="container py-6 max-w-7xl">
         {/* Back Button */}
         <Button
           variant="ghost"
@@ -135,19 +135,7 @@ export default function BookDetail() {
             </div>
           </div>
         )}
-
-        {/* Warning for books listed more than 12 hours ago */}
-        {isOldListing && book.availability === 'available' && (
-          <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
-              <AlertCircle className="h-5 w-5" />
-              <p className="text-sm">
-                This book was listed more than 12 hours ago. Please verify availability with the seller.
-              </p>
-            </div>
-          </div>
-        )}
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6">
           {/* Book Image */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -155,7 +143,7 @@ export default function BookDetail() {
             className="lg:col-span-1"
           >
             <div className="sticky top-24">
-              <div className="aspect-[3/4] max-w-sm mx-auto overflow-hidden rounded-lg bg-muted shadow-lg">
+              <div className="aspect-[3/4] max-w-xs mx-auto overflow-hidden rounded-lg bg-muted shadow-lg">
                 <img
                   src={book.imageURL}
                   alt={book.bookTitle}
@@ -163,11 +151,12 @@ export default function BookDetail() {
                 />
               </div>
 
-              <div className="mt-6">
+              <div className="mt-6 max-w-xs mx-auto">
                 {isOwner ? (
                   <Button className="w-full" disabled>
                     Your Book
-                  </Button>                ) : (
+                  </Button>
+                ) : (
                   <div className="flex gap-3">
                     <Button
                       className="flex-1"
@@ -199,19 +188,20 @@ export default function BookDetail() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-2 space-y-8"
-          >            {/* Header */}
+            className="lg:col-span-2 space-y-6"
+          >
+            {/* Header */}
             <div className="border-b pb-6">
               {book.availability === 'sold' && (
                 <span className="inline-block px-3 py-1 bg-destructive text-destructive-foreground text-sm rounded-full mb-4">
                   Sold Out
                 </span>
               )}
-              <h1 className="text-4xl font-bold mb-3 leading-tight">{book.bookTitle}</h1>
-              <p className="text-xl text-muted-foreground mb-4">by {book.authorName}</p>
+              <h1 className="text-3xl font-bold mb-2 leading-tight">{book.bookTitle}</h1>
+              <p className="text-lg text-muted-foreground mb-3">by {book.authorName}</p>
               
-              <div className="flex flex-wrap items-center gap-6">
-                <span className="text-3xl font-bold text-primary">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-2xl font-bold text-primary">
                   {formatCurrency(book.Price)}
                 </span>
                 <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
@@ -222,14 +212,14 @@ export default function BookDetail() {
 
             {/* Description */}
             <div className="prose max-w-none">
-              <h3 className="text-xl font-semibold mb-3">Description</h3>
-              <p className="text-muted-foreground leading-relaxed">{book.bookDescription}</p>
+              <h3 className="text-lg font-semibold mb-2">Description</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{book.bookDescription}</p>
             </div>
 
             {/* Book Details */}
-            <div className="bg-muted/50 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Book Details</h3>
-              <div className="grid sm:grid-cols-2 gap-6">
+            <div className="bg-muted/50 rounded-lg p-5">
+              <h3 className="text-lg font-semibold mb-3">Book Details</h3>
+              <div className="grid sm:grid-cols-2 gap-4">
                 {book.authenticity && (
                   <div className="flex items-center gap-3">
                     <Shield className="h-5 w-5 text-primary flex-shrink-0" />

@@ -1,10 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { bookService } from '@/features/books/services/bookService';
 import BookGrid from '@/features/books/components/BookGrid';
 import ServerErrorHandler from '@/components/ui/ServerErrorHandler';
+import { startPolling, stopPolling } from '@/lib/realtime';
 
 export default function LatestBooks() {
+  const queryClient = useQueryClient();
   const { data: books = [], isLoading, error, refetch } = useQuery({
     queryKey: ['latestBooks'],
     queryFn: () => bookService.getLatestBooks(10),
@@ -15,9 +18,16 @@ export default function LatestBooks() {
       return false;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always stale to allow polling
     suspense: false,
   });
+
+  // Poll for new books every 30 seconds (real-time updates)
+  useEffect(() => {
+    const stopFn = startPolling(queryClient, ['latestBooks'], () => 
+      bookService.getLatestBooks(10), 30000);
+    return stopFn;
+  }, [queryClient]);
 
   // Filter out old sold books for public listings
   const filteredBooks = books; // Already filtered by backend

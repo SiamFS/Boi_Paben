@@ -93,22 +93,36 @@ export const bookService = {
   async uploadBook(bookData) {
     try {
       const response = await apiClient.post('/api/books/upload', bookData);
+      // Clear all book list caches after upload
+      cache.delete('/api/books/latest');
+      cache.delete('/api/books/all');
+      cache.delete(`/api/books/category/${bookData.category}`);
+      cache.delete(`/api/books/user/${bookData.email}`);
       return response.data;
     } catch (error) {
-      console.error('Upload book error:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
       throw error;
     }
   },
 
   async updateBook(id, bookData) {
     const response = await apiClient.patch(`/api/books/${id}`, bookData);
+    // Clear all book list caches after update
+    cache.delete('/api/books/latest');
+    cache.delete('/api/books/all');
+    if (bookData.category) {
+      cache.delete(`/api/books/category/${bookData.category}`);
+    }
+    if (bookData.email) {
+      cache.delete(`/api/books/user/${bookData.email}`);
+    }
     return response.data;
   },
 
   async deleteBook(id) {
     const response = await apiClient.delete(`/api/books/${id}`);
+    // Clear all book list caches after delete
+    cache.delete('/api/books/latest');
+    cache.delete('/api/books/all');
     return response.data;
   },
 
@@ -141,7 +155,6 @@ export const bookService = {
 
       return data.data.url;
     } catch (error) {
-      console.error('Image upload error:', error);
       throw new Error(`Failed to upload image: ${error.message}`);
     }
   },

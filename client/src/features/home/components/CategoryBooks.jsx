@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { bookService } from '@/features/books/services/bookService';
@@ -7,8 +7,10 @@ import { bookCategories } from '@/lib/utils';
 import BookGrid from '@/features/books/components/BookGrid';
 import { Button } from '@/components/ui/Button';
 import ServerErrorHandler from '@/components/ui/ServerErrorHandler';
+import { startPolling, stopPolling } from '@/lib/realtime';
 
 export default function CategoryBooks() {
+  const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState(bookCategories[0]);
   const [retryCount, setRetryCount] = useState(0);
   const { data: books = [], isLoading, error, refetch } = useQuery({
@@ -16,14 +18,21 @@ export default function CategoryBooks() {
     queryFn: () => bookService.getBooksByCategory(selectedCategory),
     retry: (failureCount, error) => {
       if (error?.code === 'NETWORK_ERROR' || error?.status >= 500) {
-        return failureCount < 2; // Fewer retries for category section
+        return failureCount < 2;
       }
       return false;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always stale to allow polling
     suspense: false,
   });
+
+  // Poll for new books in selected category every 30 seconds (real-time updates)
+  useEffect(() => {
+    const stopFn = startPolling(queryClient, ['categoryBooks', selectedCategory], () => 
+      bookService.getBooksByCategory(selectedCategory), 30000);
+    return stopFn;
+  }, [queryClient, selectedCategory]);
   const handleRetry = async () => {
     setRetryCount(prev => prev + 1);
     await refetch();

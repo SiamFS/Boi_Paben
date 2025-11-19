@@ -65,10 +65,8 @@ export function AuthProvider({ children }) {
         return response.data.user;
       }
     } catch (error) {
-      console.error('Error getting auth token:', error);
       // Return cached data as fallback if available
       if (cachedUser) {
-        console.log('Using cached auth data as fallback');
         return cachedUser;
       }
       throw error;
@@ -102,7 +100,6 @@ export function AuthProvider({ children }) {
       toast.success('Account created! Please verify your email.');
       return { success: true, message: 'Please check your email for verification.' };
     } catch (error) {
-      console.error('Signup error:', error);
       throw error;
     }
   };
@@ -130,7 +127,6 @@ export function AuthProvider({ children }) {
       toast.success('Welcome back!');
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
     }
   };
@@ -163,7 +159,6 @@ export function AuthProvider({ children }) {
       toast.success('Welcome!');
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Google sign-in error:', error);
       throw error;
     }
   };
@@ -173,7 +168,6 @@ export function AuthProvider({ children }) {
       await sendPasswordResetEmail(auth, email);
       toast.success('Password reset email sent!');
     } catch (error) {
-      console.error('Password reset error:', error);
       throw error;
     }
   };
@@ -185,7 +179,6 @@ export function AuthProvider({ children }) {
       setUser(null);
       toast.success('Logged out successfully');
     } catch (error) {
-      console.error('Logout error:', error);
       toast.error('Failed to logout');
     }
   };
@@ -208,7 +201,6 @@ export function AuthProvider({ children }) {
         toast.success('Profile updated successfully');
       }
     } catch (error) {
-      console.error('Profile update error:', error);
       toast.error('Failed to update profile');
     }
   };
@@ -226,7 +218,6 @@ export function AuthProvider({ children }) {
           localStorage.removeItem('auth_token');
         }
       } catch (error) {
-        console.error('Auth state change error:', error);
         setUser(null);
       } finally {
         setLoading(false);

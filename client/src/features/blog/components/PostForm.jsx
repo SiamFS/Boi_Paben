@@ -32,7 +32,7 @@ export default function PostForm({ initialData, onSubmit, onCancel, loading }) {
       try {
         imageUrl = await bookService.uploadImage(imageFile);
       } catch (error) {
-        console.error('Image upload failed:', error);
+        // Image upload failed silently
       } finally {
         setUploadingImage(false);
       }

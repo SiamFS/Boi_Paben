@@ -23,7 +23,6 @@ export const warmupBackend = async () => {
   }
 
   warmupAttempted = true;
-  console.log('🚀 Warming up backend server (Render hosting)...');
 
   const maxAttempts = 3;
   let attempt = 0;
@@ -32,8 +31,6 @@ export const warmupBackend = async () => {
     attempt++;
     
     try {
-      console.log(`⏳ Warmup attempt ${attempt}/${maxAttempts}...`);
-      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout per attempt
 
@@ -49,32 +46,20 @@ export const warmupBackend = async () => {
 
       if (response.ok) {
         warmupSuccessful = true;
-        console.log('✅ Backend server is ready!');
         break;
       } else {
-        console.log(`⚠️ Attempt ${attempt} got status:`, response.status);
         if (attempt < maxAttempts) {
-          console.log('⏳ Retrying in 10 seconds...');
           await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10s before retry
         }
       }
     } catch (error) {
-      if (error.name === 'AbortError') {
-        console.log(`⏱️ Attempt ${attempt} timed out`);
-      } else {
-        console.log(`⚠️ Attempt ${attempt} error:`, error.message);
-      }
-      
       if (attempt < maxAttempts) {
-        console.log('⏳ Retrying in 15 seconds...');
         await new Promise(resolve => setTimeout(resolve, 15000)); // Wait 15s after error
       }
     }
   }
 
-  if (!warmupSuccessful) {
-    console.log('⚠️ Backend warmup did not complete successfully, but requests will continue with extended timeouts');
-  }
+  // If warmup unsuccessful, requests will continue with extended timeouts
 };
 
 /**

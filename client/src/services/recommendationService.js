@@ -3,7 +3,7 @@ import cache from '@/lib/cache';
 
 class RecommendationService {
   constructor() {
-    this.cacheTime = 1800; // 30 minutes
+    this.cacheTime = 120; // 2 minutes - shorter for fresher data
   }
   async getRecommendations(userId = null, limit = 10) {
     const cacheKey = `recommendations_${userId || 'anonymous'}_${limit}`;
@@ -29,7 +29,6 @@ class RecommendationService {
       // If no recommendations, return latest books
       return await this.getLatestBooks(limit);
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
       // Fallback to latest books
       return await this.getLatestBooks(limit);
     }
@@ -51,13 +50,12 @@ class RecommendationService {
       
       if (response.data.success) {
         // Cache for shorter time since these are latest
-        cache.set(cacheKey, response.data.books, 900); // 15 minutes
+        cache.set(cacheKey, response.data.books, 120); // 2 minutes
         return response.data.books;
       }
       
       return [];
     } catch (error) {
-      console.error('Error fetching latest books:', error);
       return [];
     }
   }  async getBannerBooks(limit = 5) {
@@ -84,7 +82,6 @@ class RecommendationService {
       cache.set(cacheKey, latestBooks, this.cacheTime);
       return latestBooks;
     } catch (error) {
-      console.error('Error fetching banner books:', error);
       return [];
     }
   }
@@ -110,7 +107,6 @@ class RecommendationService {
       
       return [];
     } catch (error) {
-      console.error('Error fetching similar books:', error);
       return [];
     }
   }
@@ -138,7 +134,6 @@ class RecommendationService {
       
       return await this.getRecommendations(userId, limit);
     } catch (error) {
-      console.error('Error fetching personalized recommendations:', error);
       return await this.getRecommendations(userId, limit);
     }
   }

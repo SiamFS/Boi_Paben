@@ -17,7 +17,7 @@ export const prefetchEssentialData = (queryClient) => {
       });
     }
   } catch (error) {
-    console.warn('Error prefetching latest books:', error);
+    // Continue if prefetch fails
   }
 
   try {
@@ -32,7 +32,7 @@ export const prefetchEssentialData = (queryClient) => {
       });
     }
   } catch (error) {
-    console.warn('Error prefetching category books:', error);
+    // Continue if prefetch fails
   }
 };
 
@@ -67,7 +67,6 @@ export const detectNetworkConditions = async () => {
                         effectiveType === 'slow-2g'
     };
   } catch (error) {
-    console.warn('Could not detect network conditions:', error);
     return { isSlowConnection: false, saveData: false };
   }
 };
