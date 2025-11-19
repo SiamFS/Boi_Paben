@@ -55,7 +55,7 @@ apiClient.interceptors.request.use(
           if (pendingRequests.size > 0 && !hasShownBackendError) {
             hasShownBackendError = true;
             toast.loading(
-              'Server is waking up (Render.com Free Tier)...\nPlease wait ~30 seconds. This is normal for the first visit.',
+              'Unable to connect to server. Please wait 30-60 seconds while the server wakes up. The server is hosted on Render.com (Free Tier) and automatically shuts down after 15 minutes of inactivity.',
               { duration: 30000, id: 'server-starting' }
             );
           }

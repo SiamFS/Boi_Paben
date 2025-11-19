@@ -130,12 +130,15 @@ export default function Navbar() {  const [isMenuOpen, setIsMenuOpen] = useState
             </Button>            <form onSubmit={handleSearch} className="hidden md:flex relative">
               <div className="relative">
                 <input
+                  id="navbar-search"
+                  name="search"
                   type="text"
                   placeholder="Search books..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  autoComplete="off"
                   className="input pr-10 w-64"
                 />
                 <button

@@ -107,6 +107,8 @@ export default function Shop() {
                 <div className="flex items-center gap-2 min-w-0">
                   <Filter className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                   <select
+                    id="category-filter"
+                    name="category"
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="input flex-1 min-w-0 text-sm sm:text-base"
@@ -123,6 +125,8 @@ export default function Shop() {
                 <div className="flex items-center gap-2 min-w-0">
                   <SortAsc className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                   <select
+                    id="sort-order"
+                    name="sort"
                     value={sortOrder}
                     onChange={(e) => setSortOrder(e.target.value)}
                     className="input flex-1 min-w-0 text-sm sm:text-base"

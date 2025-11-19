@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
 
 export default function BookCard({ book, listView = false }) {
-  const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const { user } = useAuth();
   const { addToCart, isInCart } = useCartStore();
@@ -43,11 +42,9 @@ export default function BookCard({ book, listView = false }) {
   };  if (listView) {
     return (
       <motion.div
-        whileHover={{ y: -2, scale: 1.01 }}
-        transition={{ duration: 0.2 }}
+        whileHover={{ y: -2 }}
+        transition={{ duration: 0.15 }}
         className="relative group"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <div className="card flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-5 h-full overflow-hidden bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
           {/* Mobile-optimized layout */}
@@ -56,7 +53,7 @@ export default function BookCard({ book, listView = false }) {
               <img
                 src={book.imageURL}
                 alt={book.bookTitle}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-300 will-change-transform group-hover:scale-105"
                 loading="lazy"
               />
               
@@ -180,11 +177,9 @@ export default function BookCard({ book, listView = false }) {
   return (
     <Link to={`/book/${book._id}`} className="block h-full no-underline">
       <motion.div
-        whileHover={{ y: -8, scale: 1.02 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.15 }}
         className="relative h-full group"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
       <div className="relative h-full flex flex-col overflow-hidden bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-all duration-300 rounded-xl shadow-md hover:shadow-xl">
         {/* Image Container */}
@@ -195,7 +190,7 @@ export default function BookCard({ book, listView = false }) {
           <img
             src={book.imageURL}
             alt={book.bookTitle}
-            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-300 will-change-transform group-hover:scale-105"
             loading="lazy"
             onLoad={() => setImageLoaded(true)}
           />

@@ -99,6 +99,8 @@ export default function SearchBar({
           
           <input
             ref={inputRef}
+            id="book-search"
+            name="search"
             type="text"
             value={query}
             onChange={handleInputChange}
@@ -106,6 +108,7 @@ export default function SearchBar({
             onBlur={handleInputBlur}
             placeholder={placeholder}
             autoFocus={autoFocus}
+            autoComplete="off"
             className={`
               w-full ${getSizeClasses()} pl-12 pr-24 rounded-full 
               bg-transparent focus:outline-none 
