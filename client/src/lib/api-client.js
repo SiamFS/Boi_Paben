@@ -16,6 +16,7 @@ const API_URL = isLocalhost
 let hasShownBackendError = false;
 let firstRequestTime = null;
 let pendingRequests = new Set();
+let serverCheckTimeout = null;
 const isProduction = !isLocalhost && !isDevelopment;
 
 // Cache configuration: which endpoints to cache and for how long (in seconds)
@@ -44,9 +45,22 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Track first request time
+    // Track first request time and set up server check timeout
     if (!firstRequestTime) {
       firstRequestTime = Date.now();
+      
+      // Show message after 5 seconds if server hasn't responded
+      if (!serverCheckTimeout && isProduction) {
+        serverCheckTimeout = setTimeout(() => {
+          if (pendingRequests.size > 0 && !hasShownBackendError) {
+            hasShownBackendError = true;
+            toast.loading(
+              'Server is waking up (Render.com Free Tier)...\nPlease wait ~30 seconds. This is normal for the first visit.',
+              { duration: 30000, id: 'server-starting' }
+            );
+          }
+        }, 5000); // Show after 5 seconds
+      }
     }
     
     // Track pending request
@@ -104,6 +118,14 @@ apiClient.interceptors.response.use(
       pendingRequests.delete(response.config.__requestId);
     }
     
+    // Clear server check timeout if server responded successfully
+    if (serverCheckTimeout && pendingRequests.size === 0) {
+      clearTimeout(serverCheckTimeout);
+      serverCheckTimeout = null;
+      // Dismiss the "server starting" message if shown
+      toast.dismiss('server-starting');
+    }
+    
     // Cache successful GET responses (skip if cache: false)
     if (response.config.method === 'get' && response.config.cache !== false) {
       const cacheKey = response.config.url;
@@ -150,45 +172,6 @@ apiClient.interceptors.response.use(
     if (!error.response && (error.code === 'ECONNABORTED' || error.message === 'Network Error' || error.code === 'ECONNREFUSED')) {
       const cacheKey = error.config?.url;
       const cachedData = cacheKey ? cache.get(cacheKey) : null;
-      
-      // Calculate time since first request
-      const timeSinceFirstRequest = firstRequestTime ? Date.now() - firstRequestTime : 0;
-      // Check if there are still pending requests
-      const hasActiveFetch = pendingRequests.size > 0;
-      const shouldShowMessage = timeSinceFirstRequest > 15000 && hasActiveFetch; // Only show after 15 seconds AND if still fetching
-
-      // Show ONE message per session only, and only after 15 seconds of actual pending requests
-      if (!hasShownBackendError && shouldShowMessage) {
-        hasShownBackendError = true;
-        
-        if (cachedData) {
-          // We have cache - show restart message
-          if (isProduction) {
-            toast.loading(
-              'Backend server starting (Render hosting)...\nThis may take 1-2 minutes. Showing cached data.',
-              { duration: 8000, id: 'backend-starting' }
-            );
-          } else {
-            toast.loading(
-              'Backend is not responding...\nShowing cached content.',
-              { duration: 4000 }
-            );
-          }
-        } else {
-          // No cache - show waiting message
-          if (isProduction) {
-            toast.loading(
-              'Backend server starting up (Render Free Tier)...\nPlease wait ~1-2 minutes for first load.',
-              { duration: 10000, id: 'backend-starting' }
-            );
-          } else {
-            toast.error(
-              'Failed to connect to server.\nPlease check your connection.',
-              { duration: 4000 }
-            );
-          }
-        }
-      }
 
       // Return cached data if available
       if (cachedData) {

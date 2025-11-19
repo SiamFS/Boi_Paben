@@ -49,7 +49,7 @@ export default function BookCard({ book, listView = false }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="card flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-5 h-full overflow-hidden bg-gradient-to-r from-card/50 to-card border border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
+        <div className="card flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-5 h-full overflow-hidden bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
           {/* Mobile-optimized layout */}
           <div className="flex gap-3 sm:contents">
             <div className="relative w-20 h-28 sm:w-24 sm:h-32 flex-shrink-0 overflow-hidden bg-muted rounded-xl shadow-sm">
@@ -186,7 +186,7 @@ export default function BookCard({ book, listView = false }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-      <div className="relative h-full flex flex-col overflow-hidden bg-gradient-to-br from-card via-card to-card/80 border border-border/50 hover:border-border transition-all duration-300 rounded-xl shadow-sm hover:shadow-xl">
+      <div className="relative h-full flex flex-col overflow-hidden bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 transition-all duration-300 rounded-xl shadow-md hover:shadow-xl">
         {/* Image Container */}
         <div className="relative aspect-[3/4] overflow-hidden bg-muted rounded-t-xl">
           {!imageLoaded && (
@@ -216,7 +216,7 @@ export default function BookCard({ book, listView = false }) {
         </div>
 
         {/* Content Container */}
-        <div className="p-3 sm:p-4 flex-grow flex flex-col bg-gradient-to-b from-card to-card/50">
+        <div className="p-3 sm:p-4 flex-grow flex flex-col bg-card/80">
           <div className="flex-grow space-y-1 sm:space-y-2">
             <h3 
               className="font-bold text-sm sm:text-base leading-tight text-foreground hover:text-primary transition-colors duration-200 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]" 
@@ -263,7 +263,7 @@ export default function BookCard({ book, listView = false }) {
                 {isOwner && isOldSoldBook && (
                   <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                     <p className="text-xs text-yellow-800 dark:text-yellow-200 font-medium">
-                      ⚠️ This book has been sold and was removed from public listings after 12 hours.
+                       This book has been sold and was removed from public listings after 12 hours.
                     </p>
                   </div>
                 )}
