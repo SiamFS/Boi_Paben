@@ -94,7 +94,7 @@ export const validatePrice = (price) => {
   const errors = [];
   
   // Handle null, undefined, or empty string
-  if (price === null || price === undefined || price === '') {
+  if (price == null || price === '') {
     errors.push(`Price is required`);
     return { isValid: false, errors, sanitized: 0 };
   }

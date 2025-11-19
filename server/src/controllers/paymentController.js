@@ -101,7 +101,9 @@ export const paymentController = {
         url: session.url
       });
     } catch (error) {
-      console.error('Stripe error:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Stripe error:', error);
+      }
       res.status(500).json({ 
         success: false, 
         error: 'Failed to create checkout session' 
@@ -220,7 +222,9 @@ export const paymentController = {
         orderId: `COD-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
       });
     } catch (error) {
-      console.error('COD processing error:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('COD processing error:', error);
+      }
       res.status(500).json({ 
         success: false, 
         error: 'Failed to process order' 
@@ -315,7 +319,9 @@ export const paymentController = {
           message: 'Payment completed successfully' 
         });
       } catch (error) {
-        console.error('Transaction error:', error);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Transaction error:', error);
+        }
         res.status(500).json({ 
           success: false, 
           error: 'Failed to complete payment' 
@@ -324,7 +330,9 @@ export const paymentController = {
         await dbSession.endSession();
       }
     } catch (error) {
-      console.error('Stripe payment completion error:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Stripe payment completion error:', error);
+      }
       res.status(500).json({ 
         success: false, 
         error: 'Failed to verify payment' 

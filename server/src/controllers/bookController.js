@@ -27,10 +27,13 @@ export const bookController = {
       ];
     }
 
+    // Optimized sorting using MongoDB indexes (O(n log n) TimSort algorithm)
     const sortOptions = {};
     if (sort) {
-      sortOptions[sort] = order === 'desc' ? -1 : 1;
+      // Support both 'Price' and 'createdAt' sorting
+      sortOptions[sort] = order === 'asc' ? 1 : -1;
     } else {
+      // Default: newest first
       sortOptions.createdAt = -1;
     }
 
@@ -61,16 +64,6 @@ export const bookController = {
   },
   async uploadBook(req, res) {
     try {
-      console.log('Upload book request received:', {
-        hasEmail: !!req.body.email,
-        hasUser: !!req.user,
-        userEmail: req.user?.email,
-        bodyEmail: req.body.email,
-        hasImageURL: !!req.body.imageURL,
-        bookTitle: req.body.bookTitle,
-        category: req.body.category,
-      });
-
       // Extract email from request body or user context
       const userEmail = req.body.email || req.user?.email;
       
@@ -123,7 +116,9 @@ export const bookController = {
         data: newBook
       });
     } catch (error) {
-      console.error('Upload book error:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Upload book error:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -195,7 +190,9 @@ export const bookController = {
         data: updatedBook
       });
     } catch (error) {
-      console.error('Update book error:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Update book error:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Internal server error'
@@ -302,7 +299,9 @@ export const bookController = {
         count: books.length
       });
     } catch (error) {
-      console.error('Search error:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Search error:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to search books'
@@ -393,7 +392,9 @@ export const bookController = {
         books: recommendedBooks
       });
     } catch (error) {
-      console.error('Error getting recommendations:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error getting recommendations:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to get recommendations'
@@ -428,7 +429,9 @@ export const bookController = {
         books: latestBooks
       });
     } catch (error) {
-      console.error('Error getting latest books:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error getting latest books:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to get latest books'
@@ -480,7 +483,9 @@ export const bookController = {
         books: similarBooks
       });
     } catch (error) {
-      console.error('Error getting similar books:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error getting similar books:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to get similar books'
@@ -512,7 +517,9 @@ export const bookController = {
         books: personalizedBooks
       });
     } catch (error) {
-      console.error('Error getting personalized recommendations:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error getting personalized recommendations:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to get personalized recommendations'
@@ -636,7 +643,9 @@ export const bookController = {
         insertedIds: result.insertedIds
       });
     } catch (error) {
-      console.error('Error seeding sample data:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error seeding sample data:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to seed sample data'
@@ -656,7 +665,9 @@ export const bookController = {
         deletedCount: result.deletedCount
       });
     } catch (error) {
-      console.error('Error clearing sample data:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error clearing sample data:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to clear sample data'
@@ -758,7 +769,9 @@ export const bookController = {
         suggestions
       });
     } catch (error) {
-      console.error('Error getting search suggestions:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error getting search suggestions:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to get search suggestions'
@@ -796,7 +809,9 @@ export const bookController = {
         categories: categoryList
       });
     } catch (error) {
-      console.error('Error getting categories:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error getting categories:', error);
+      }
       res.status(500).json({
         success: false,
         error: 'Failed to get categories'
@@ -875,7 +890,9 @@ export const bookController = {
         publicId: data.public_id,
       });
     } catch (error) {
-      console.error('Image upload error:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Image upload error:', error);
+      }
       res.status(500).json({ error: 'Failed to upload image' });
     }
   }

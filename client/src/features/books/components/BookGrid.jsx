@@ -1,6 +1,7 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Navigation } from 'swiper/modules';
 import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 import BookCard from './BookCard';
 import { BookGridSkeleton } from '@/components/ui/LoadingComponents';
 import 'swiper/css';
@@ -8,7 +9,25 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
 export default function BookGrid({ books, loading, view = 'carousel', error = null }) {
-  if (loading) {
+  const [showLoading, setShowLoading] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      // Only show loading animation after 3 seconds
+      timer = setTimeout(() => {
+        setShowLoading(true);
+      }, 3000);
+    } else {
+      setShowLoading(false);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
+
+  if (showLoading) {
     // Define container class based on view
     if (view === 'grid') {
       return <BookGridSkeleton count={10} />;

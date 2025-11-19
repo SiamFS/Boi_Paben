@@ -113,6 +113,7 @@ export default function UploadBook() {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['latestBooks'] });
       queryClient.invalidateQueries({ queryKey: ['categoryBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['shopBooks'] }); // Invalidate shop page
       
       // Clear localStorage cache for book lists
       cache.delete('/api/books/latest');

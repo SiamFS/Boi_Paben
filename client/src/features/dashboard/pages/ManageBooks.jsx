@@ -19,6 +19,10 @@ export default function ManageBooks() {
     queryKey: ['userBooks', user?.email],
     queryFn: () => bookService.getUserBooks(user.email),
     enabled: !!user?.email,
+    staleTime: 0, // Always consider stale for fresh data
+    gcTime: 0, // Don't keep in cache
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when user returns to page
     retry: (failureCount, error) => {
       if (error?.code === 'NETWORK_ERROR' || error?.status >= 500) {
         return failureCount < 2;
@@ -35,6 +39,7 @@ export default function ManageBooks() {
       queryClient.invalidateQueries({ queryKey: ['books'] });
       queryClient.invalidateQueries({ queryKey: ['latestBooks'] });
       queryClient.invalidateQueries({ queryKey: ['categoryBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['shopBooks'] }); // Invalidate shop page
       toast.success('Book deleted successfully');
     },
     onError: (error) => {

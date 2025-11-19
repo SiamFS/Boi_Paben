@@ -20,10 +20,10 @@ const isProduction = !isLocalhost && !isDevelopment;
 
 // Cache configuration: which endpoints to cache and for how long (in seconds)
 const CACHE_CONFIG = {
-  '/api/books/all': 120, // 2 minutes - fresher data
+  // Removed '/api/books/all' from cache to prevent sorting/filtering issues
   '/api/books/latest': 120, // 2 minutes - fresher data
   '/api/books/category': 120, // 2 minutes - fresher data
-  '/api/books/user': 120, // 2 minutes - fresher data
+  // Removed '/api/books/user' from cache for dashboard real-time updates
   '/api/blog/posts': 120, // 2 minutes - fresher data
   '/api/blog/reactions': 120, // 2 minutes - fresher data
 };
@@ -75,8 +75,8 @@ apiClient.interceptors.request.use(
       delete config.priority;
     }
     
-    // Check cache for GET requests
-    if (config.method === 'get') {
+    // Check cache for GET requests (skip if cache: false)
+    if (config.method === 'get' && config.cache !== false) {
       const cacheKey = config.url;
       const cachedData = cache.get(cacheKey);
       if (cachedData) {
@@ -104,8 +104,8 @@ apiClient.interceptors.response.use(
       pendingRequests.delete(response.config.__requestId);
     }
     
-    // Cache successful GET responses
-    if (response.config.method === 'get') {
+    // Cache successful GET responses (skip if cache: false)
+    if (response.config.method === 'get' && response.config.cache !== false) {
       const cacheKey = response.config.url;
       // Check if this endpoint should be cached
       const shouldCache = Object.keys(CACHE_CONFIG).some(pattern => {

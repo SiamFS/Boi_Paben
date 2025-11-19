@@ -24,15 +24,11 @@ export const bookService = {
     try {
       const response = await apiClient.get('/api/books/all', { 
         params,
-        priority: params.priority || 'low' // Default to low priority for bulk data
+        priority: params.priority || 'low', // Default to low priority for bulk data
+        cache: false // Disable cache for proper sorting/filtering
       });
       return response.data;
     } catch (error) {
-      // Try to get from cache as fallback
-      const cachedBooks = cache.get('/api/books/all');
-      if (cachedBooks) {
-        return cachedBooks;
-      }
       throw error;
     }
   },
@@ -40,7 +36,8 @@ export const bookService = {
   async getBookById(id) {
     try {
       const response = await apiClient.get(`/api/books/${id}`, {
-        priority: 'high' // High priority for individual book details
+        priority: 'high', // High priority for individual book details
+        cache: false // Don't cache individual book details for fresh data
       });
       return response.data;
     } catch (error) {
@@ -78,15 +75,11 @@ export const bookService = {
   async getUserBooks(email) {
     try {
       const response = await apiClient.get(`/api/books/user/${email}`, {
-        priority: 'normal' // Normal priority for user's books
+        priority: 'normal', // Normal priority for user's books
+        cache: false // Don't cache dashboard data
       });
       return response.data;
     } catch (error) {
-      // Try to get from cache as fallback
-      const cachedBooks = cache.get(`/api/books/user/${email}`);
-      if (cachedBooks) {
-        return cachedBooks;
-      }
       throw error;
     }
   },
@@ -105,15 +98,23 @@ export const bookService = {
   },
 
   async updateBook(id, bookData) {
-    const response = await apiClient.patch(`/api/books/${id}`, bookData);
-    // Clear all book list caches after update
+    // Ensure Price is a number for backend
+    const sanitizedData = {
+      ...bookData,
+      Price: typeof bookData.Price === 'string' ? parseFloat(bookData.Price) : bookData.Price
+    };
+    
+    const response = await apiClient.patch(`/api/books/${id}`, sanitizedData);
+    // Clear all book caches after update including the specific book
     cache.delete('/api/books/latest');
     cache.delete('/api/books/all');
+    cache.delete(`/api/books/${id}`); // Clear this specific book's cache
     if (bookData.category) {
       cache.delete(`/api/books/category/${bookData.category}`);
     }
-    if (bookData.email) {
-      cache.delete(`/api/books/user/${bookData.email}`);
+    if (bookData.email || bookData.userEmail) {
+      const email = bookData.email || bookData.userEmail;
+      cache.delete(`/api/books/user/${email}`);
     }
     return response.data;
   },

@@ -18,7 +18,9 @@ export const connectDB = async () => {
       maxIdleTimeMS: 60000,
       waitQueueTimeoutMS: 5000
     });    await client.connect();
-    console.log('MongoDB connected successfully');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('MongoDB connected successfully');
+    }
     
     db = client.db('coverbook');
     return db;

@@ -15,7 +15,7 @@ const bookSchema = z.object({
   bookTitle: z.string().min(3, 'Title must be at least 3 characters'),
   authorName: z.string().min(2, 'Author name must be at least 2 characters'),
   category: z.string().min(1, 'Please select a category'),
-  Price: z.string().min(1, 'Price is required'),
+  Price: z.union([z.string(), z.number()]).transform(val => String(val)),
   bookDescription: z.string().min(20, 'Description must be at least 20 characters'),
   authenticity: z.string(),
   productCondition: z.string(),
@@ -109,15 +109,15 @@ export default function EditBook() {
 
       await bookService.updateBook(id, bookData);
       
-      // Invalidate all book-related queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['book', id] });
-      queryClient.invalidateQueries({ queryKey: ['userBooks'] });
-      queryClient.invalidateQueries({ queryKey: ['books'] });
-      queryClient.invalidateQueries({ queryKey: ['latestBooks'] });
-      queryClient.invalidateQueries({ queryKey: ['categoryBooks'] });
+      // Invalidate relevant queries to refetch fresh data
+      await queryClient.invalidateQueries({ queryKey: ['book', id] });
+      await queryClient.invalidateQueries({ queryKey: ['userBooks'] });
+      await queryClient.invalidateQueries({ queryKey: ['shopBooks'] });
       
       toast.success('Book updated successfully!');
-      navigate('/dashboard/manage');
+      
+      // Navigate to manage page and it will fetch fresh data
+      navigate('/dashboard/manage', { replace: true });
     } catch (error) {
       toast.error('Failed to update book');
     } finally {

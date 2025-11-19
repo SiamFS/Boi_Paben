@@ -16,8 +16,11 @@ export const createIndexes = async () => {
     await bookCollection.createIndex({ availability: 1 });
     await bookCollection.createIndex({ email: 1 });
     await bookCollection.createIndex({ createdAt: -1 });
+    await bookCollection.createIndex({ Price: 1 }); // For price sorting (ascending)
+    await bookCollection.createIndex({ Price: -1 }); // For price sorting (descending)
     await bookCollection.createIndex({ soldAt: 1 });
     await bookCollection.createIndex({ availability: 1, soldAt: 1 }); // Compound index
+    await bookCollection.createIndex({ category: 1, Price: 1 }); // Compound index for category + price sorting
     await bookCollection.createIndex({ bookTitle: 'text', authorName: 'text' }); // Text search
     if (process.env.NODE_ENV !== 'production') {
       console.log('✓ Books collection indexes created');

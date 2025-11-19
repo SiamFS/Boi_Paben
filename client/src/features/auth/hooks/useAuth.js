@@ -3,12 +3,21 @@ import { AuthContext } from '../contexts/AuthContext';
 
 /**
  * Custom hook to access authentication context
- * Must be used within an AuthProvider
+ * Safe to use even before AuthProvider is mounted
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  
+  // Return safe defaults if used before AuthProvider is mounted
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    return {
+      user: null,
+      loading: true,
+      login: async () => {},
+      signup: async () => {},
+      logout: async () => {},
+    };
   }
+  
   return context;
 };

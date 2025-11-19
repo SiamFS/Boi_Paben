@@ -14,13 +14,24 @@ export default function Shop() {
   const [view, setView] = useState('grid');
   const [retryCount, setRetryCount] = useState(0);
   
-  const { data: books = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['shopBooks', sortOrder, selectedCategory],
-    queryFn: () => bookService.getAllBooks({
-      sort: sortOrder ? 'Price' : 'createdAt',
-      order: sortOrder || 'desc',
-      category: selectedCategory,
-    }),
+  const { data: books = [], isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: ['shopBooks', selectedCategory, sortOrder], // Include both in key for unique queries
+    queryFn: () => {
+      // If sortOrder is set, use Price sorting, otherwise default to createdAt
+      const params = {
+        category: selectedCategory,
+      };
+      
+      if (sortOrder) {
+        params.sort = 'Price';
+        params.order = sortOrder; // 'asc' or 'desc'
+      } else {
+        params.sort = 'createdAt';
+        params.order = 'desc';
+      }
+      
+      return bookService.getAllBooks(params);
+    },
     retry: (failureCount, error) => {
       // Retry up to 4 times for server cold starts (Render hosting)
       if (error?.code === 'NETWORK_ERROR' || error?.code === 'ECONNABORTED' || error?.status >= 500) {
@@ -32,8 +43,11 @@ export default function Shop() {
       // Progressive delays: 15s, 30s, 45s, 60s for Render cold starts
       return Math.min(15000 * (attemptIndex + 1), 60000);
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in v5)
+    staleTime: 0, // No cache - always fetch fresh data for sorting/filtering
+    gcTime: 5 * 60 * 1000, // Keep in memory for 5 minutes
+    refetchOnMount: true, // Always refetch on mount for fresh data
+    refetchOnWindowFocus: false, // Don't refetch on tab focus
+    notifyOnChangeProps: ['data', 'error'], // Only notify on data/error changes, not loading states
   });
   const handleRetry = async () => {
     setRetryCount(prev => prev + 1);
@@ -54,7 +68,7 @@ export default function Shop() {
       );
     }
 
-    if (filteredBooks.length === 0 && !isLoading) {
+    if (filteredBooks.length === 0 && !isLoading && !isFetching) {
       return (
         <div className="text-center py-12">
           <p className="text-xl text-muted-foreground">
@@ -65,7 +79,7 @@ export default function Shop() {
     }
 
     return (
-      <BookGrid books={filteredBooks} loading={isLoading} view={view} error={error} />
+      <BookGrid books={filteredBooks} loading={isLoading && books.length === 0} view={view} error={error} />
     );
   };
 
@@ -96,7 +110,6 @@ export default function Shop() {
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="input flex-1 min-w-0 text-sm sm:text-base"
-                    disabled={isLoading}
                   >
                     <option value="">All Categories</option>
                     {bookCategories.map((category) => (
@@ -113,7 +126,6 @@ export default function Shop() {
                     value={sortOrder}
                     onChange={(e) => setSortOrder(e.target.value)}
                     className="input flex-1 min-w-0 text-sm sm:text-base"
-                    disabled={isLoading}
                   >
                     <option value="">Sort by Date</option>
                     <option value="asc">Price: Low to High</option>
@@ -128,7 +140,6 @@ export default function Shop() {
                   variant={view === 'grid' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setView('grid')}
-                  disabled={isLoading}
                   className="text-xs sm:text-sm px-3 sm:px-4"
                 >
                   <span className="hidden sm:inline">Grid</span>
@@ -138,7 +149,6 @@ export default function Shop() {
                   variant={view === 'list' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setView('list')}
-                  disabled={isLoading}
                   className="text-xs sm:text-sm px-3 sm:px-4"
                 >
                   <span className="hidden sm:inline">List</span>
@@ -148,7 +158,7 @@ export default function Shop() {
             </div>
 
             {/* Results count and mobile-friendly info */}
-            {!isLoading && filteredBooks.length > 0 && (
+            {!isLoading && !isFetching && filteredBooks.length > 0 && (
               <div className="flex items-center justify-between text-sm text-muted-foreground border-b pb-2">
                 <span>{filteredBooks.length} book{filteredBooks.length !== 1 ? 's' : ''} found</span>
                 <span className="hidden sm:inline">

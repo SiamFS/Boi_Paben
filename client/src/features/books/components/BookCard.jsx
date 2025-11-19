@@ -15,7 +15,7 @@ export default function BookCard({ book, listView = false }) {
   const { user } = useAuth();
   const { addToCart, isInCart } = useCartStore();
   const inCart = isInCart(book._id);
-  const isOwner = user?.email === book.email;
+  const isOwner = user?.email === book?.email;
 
   // Check if book was sold more than 12 hours ago
   const isOldSoldBook = book.availability === 'sold' && book.soldAt && 
@@ -212,24 +212,7 @@ export default function BookCard({ book, listView = false }) {
             <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg">
               SOLD
             </div>
-          )}          {/* Hover Overlay */}
-          {isHovered && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center pointer-events-none"
-            >
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="bg-white/90 hover:bg-white text-gray-900 shadow-lg backdrop-blur-sm"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                View Details
-              </Button>
-            </motion.div>
-          )}
+          )}          {/* Removed hover overlay to prevent flashing */}
         </div>
 
         {/* Content Container */}

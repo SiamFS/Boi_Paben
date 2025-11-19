@@ -61,7 +61,9 @@ router.post('/verify-firebase', asyncHandler(async (req, res) => {
       user: tokenPayload
     });
   } catch (error) {
-    console.error('Firebase verification error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Firebase verification error:', error);
+    }
     res.status(500).json({
       success: false,
       error: 'Authentication failed'
@@ -100,7 +102,9 @@ router.put('/profile', authenticate, asyncHandler(async (req, res) => {
       message: 'Profile updated successfully'
     });
   } catch (error) {
-    console.error('Profile update error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Profile update error:', error);
+    }
     res.status(500).json({
       success: false,
       error: 'Failed to update profile'
@@ -118,7 +122,9 @@ router.post('/logout', authenticate, asyncHandler(async (req, res) => {
       message: 'Logged out successfully'
     });
   } catch (error) {
-    console.error('Logout error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Logout error:', error);
+    }
     res.status(500).json({
       success: false,
       error: 'Failed to logout'
